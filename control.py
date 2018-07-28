@@ -1,12 +1,55 @@
 import wx
 
-class LayoutFrame(wx.Frame):
+
+class EventsFrame(wx.Frame):
+    def __init__(self, *args, **kwargs):
+        super(EventsFrame, self).__init__(*args, **kwargs)
+
+    def OnNew(self, e):
+        pass
+
+    def OnOpen(self, e):
+        pass
+
+    def OnSave(self, e):
+        pass
+
+    def OnOpenSetup(self, e):
+        pass
+
+    def OnSaveSetup(self, e):
+        pass
+
+    def OnExit(self, e):
+        self.Close()
+
+    def OnRun(self, e):
+        pass
+
+    def OnAbort(self, e):
+        pass
+
+    def OnStop(self, e):
+        pass
+
+    def OnPreferences(self, e):
+        pass
+
+    def OnHelp(self, e):
+        pass
+
+    def OnAbout(self, e):
+        pass
+
+
+class LayoutFrame(EventsFrame):
     def __init__(self, *args, **kwargs):
         super(LayoutFrame, self).__init__(*args, **kwargs)
+        self.panel = wx.Panel(self)
         self.InitLayout()
 
     def InitLayout(self):
-        panel = wx.Panel(self)
+        panel = self.panel
         sizer = wx.GridBagSizer(3, 3)
         panel.SetSizer(sizer)
         data_box = wx.TextCtrl(panel, style=wx.TE_MULTILINE)
@@ -132,6 +175,8 @@ class LayoutFrame(wx.Frame):
 
         sizer.Add((10, 10), pos=(35, 1))
 
+
+
 class MenuFrame(LayoutFrame):
     def __init__(self, *args, **kwargs):
         super(MenuFrame, self).__init__(*args, **kwargs)
@@ -146,14 +191,13 @@ class MenuFrame(LayoutFrame):
         save_mi = wx.MenuItem(file_menu, wx.ID_ANY, '&Save')
         open_setup_mi = wx.MenuItem(file_menu, wx.ID_ANY, '&Open Setup')
         save_setup_mi = wx.MenuItem(file_menu, wx.ID_ANY, '&Save Setup')
-        close_mi = wx.MenuItem(file_menu, wx.ID_ANY, 'Close Window')
         exit_mi = wx.MenuItem(file_menu, wx.ID_ANY, 'Exit')
 
         [ file_menu.AppendItem(i) for i in (new_mi, open_mi, save_mi) ]
         file_menu.AppendSeparator()
         [ file_menu.AppendItem(i) for i in (open_setup_mi, save_setup_mi) ]
         file_menu.AppendSeparator()
-        [ file_menu.AppendItem(i) for i in (close_mi, exit_mi) ]
+        file_menu.AppendItem(exit_mi)
         
         control_menu = wx.Menu()
         run_mi = wx.MenuItem(control_menu, wx.ID_ANY, '&Run')
@@ -178,7 +222,6 @@ class MenuFrame(LayoutFrame):
         self.Bind(wx.EVT_MENU, self.OnSave, save_mi)
         self.Bind(wx.EVT_MENU, self.OnOpenSetup, open_setup_mi)
         self.Bind(wx.EVT_MENU, self.OnSaveSetup, save_setup_mi)
-        self.Bind(wx.EVT_MENU, self.OnClose, close_mi)
         self.Bind(wx.EVT_MENU, self.OnExit, exit_mi)
         
         self.Bind(wx.EVT_MENU, self.OnRun, run_mi)
@@ -195,46 +238,6 @@ class MenuFrame(LayoutFrame):
 
         self.SetMenuBar(menubar)
 
-    def OnNew(self, e):
-        pass
-
-    def OnOpen(self, e):
-        pass
-
-    def OnSave(self, e):
-        pass
-
-    def OnOpenSetup(self, e):
-        pass
-
-    def OnSaveSetup(self, e):
-        pass
-
-    def OnClose(self, e):
-        self.Close()
-
-    def OnExit(self, e):
-        self.Close()
-
-    def OnRun(self, e):
-        pass
-
-    def OnAbort(self, e):
-        pass
-
-    def OnStop(self, e):
-        pass
-
-    def OnPreferences(self, e):
-        pass
-
-    def OnHelp(self, e):
-        pass
-
-    def OnAbout(self, e):
-        pass
-
-
 class WindowFrame(MenuFrame):
     def __init__(self, *args, **kwargs):
         super(WindowFrame, self).__init__(*args, **kwargs)
@@ -245,10 +248,38 @@ class WindowFrame(MenuFrame):
         self.SetTitle('Heckler Control')
         self.Center()
 
+
+class ToolbarFrame(WindowFrame ):
+    def __init__(self, *args, **kwargs):
+        super(ToolbarFrame, self).__init__(*args, **kwargs)
+        self.toolbar = None
+        self.InitToolbar()
+
+    def InitToolbar(self):
+        toolbar = wx.ToolBar(self, wx.ID_ANY, style=wx.TB_TEXT | wx.TB_HORIZONTAL, pos=(0, 0))
+        self.ToolBar = toolbar
+        new_tb = toolbar.AddTool(wx.ID_ANY, wx.Bitmap('res/icon/file.png'))
+        open_tb = toolbar.AddTool(wx.ID_OPEN, wx.Bitmap('res/icon/folder-open.png'))
+        save_tb = toolbar.AddTool(wx.ID_SAVE, wx.Bitmap('res/icon/save.png'))
+        exit_tb = toolbar.AddTool(wx.ID_EXIT, wx.Bitmap('res/icon/sign-out-alt.png'))
+        run_tb = toolbar.AddTool(wx.ID_EXECUTE, wx.Bitmap('res/icon/play.png'))
+        stop_tb = toolbar.AddTool(wx.ID_STOP, wx.Bitmap('res/icon/stop.png'))
+        toolbar.EnableTool(wx.ID_SAVE, False)
+        toolbar.EnableTool(wx.ID_STOP, False)
+        toolbar.EnableTool(wx.ID_EXECUTE, False)
+        toolbar.Bind(wx.EVT_TOOL, self.OnNew, new_tb)
+        toolbar.Bind(wx.EVT_TOOL, self.OnOpen, open_tb)
+        toolbar.Bind(wx.EVT_TOOL, self.OnSave, save_tb)
+        toolbar.Bind(wx.EVT_TOOL, self.OnExit, exit_tb)
+        toolbar.Bind(wx.EVT_TOOL, self.OnRun, run_tb)
+        toolbar.Bind(wx.EVT_TOOL, self.OnStop, stop_tb)
+        toolbar.Realize()
+
+
 def main():
     app = wx.App()
-    window_frame = WindowFrame(None)
-    window_frame.Show()
+    toolbar_frame = ToolbarFrame(None)
+    toolbar_frame.Show()
     app.MainLoop()
 
 if __name__ == '__main__':
