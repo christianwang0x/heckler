@@ -10,10 +10,10 @@ class LayoutFrame(wx.Frame):
         sizer = wx.GridBagSizer(3, 3)
         panel.SetSizer(sizer)
         data_box = wx.TextCtrl(panel, style=wx.TE_MULTILINE)
-        sizer.Add(data_box, pos=(1, 1), span=(33, 1), flag=wx.EXPAND)
+        sizer.Add(data_box, pos=(1, 1), span=(32, 1), flag=wx.EXPAND)
 
         sizer.AddGrowableCol(1)
-        sizer.AddGrowableRow(33)
+        sizer.AddGrowableRow(32)
 
         run_btn = wx.Button(panel, label="Run", size=(120,30))
         sizer.Add(run_btn, pos=(1, 2))
@@ -44,12 +44,12 @@ class LayoutFrame(wx.Frame):
                          style=wx.CB_READONLY)
         sizer.Add(mode_cb, pos=(8, 3), span=(1, 2))
 
-        mrkr_lbl = wx.StaticText(panel, label="Marker #:")
-        sizer.Add(mrkr_lbl, pos=(9,2))
-        mrkr_numbers = [str(i) for i in range(1, 17)]
-        mrkr_cb = wx.ComboBox(panel, choices=mrkr_numbers,
+        mark_lbl = wx.StaticText(panel, label="Marker #:")
+        sizer.Add(mark_lbl, pos=(9,2))
+        mark_numbers = [str(i) for i in range(1, 17)]
+        mark_cb = wx.ComboBox(panel, choices=mark_numbers,
                               style=wx.CB_READONLY)
-        sizer.Add(mrkr_cb, pos=(9, 3))
+        sizer.Add(mark_cb, pos=(9, 3))
 
         load_ps_btn = wx.Button(panel, label="Load File", size=(90, 30))
         sizer.Add(load_ps_btn, pos=(9, 4))
@@ -122,6 +122,11 @@ class LayoutFrame(wx.Frame):
         dbr_txt = wx.TextCtrl(panel)
         sizer.Add(dbr_txt, pos=(31, 4), span=(1, 1), flag=wx.EXPAND)
 
+
+        add_mark_btn = wx.Button(panel, label="Add Markers", size=(90, 30))
+        sizer.Add(add_mark_btn, pos=(33, 1))
+        clr_mark_btn = wx.Button(panel, label="Clear Markers", size=(90, 30))
+        sizer.Add(clr_mark_btn, pos=(33, 2))
 
 class MenuFrame(LayoutFrame):
     def __init__(self, *args, **kwargs):
@@ -229,7 +234,7 @@ class WindowFrame(MenuFrame):
         self.InitWindow()
         
     def InitWindow(self):
-        self.SetSize((1200, 800))
+        self.SetSize((1200, 880))
         self.SetTitle('Heckler Control')
         self.Center()
 
