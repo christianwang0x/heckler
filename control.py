@@ -3,6 +3,29 @@ import wx
 from default_settings import *
 
 
+class Options:
+    def __init__(self):
+        self.data = None
+        self.host = None
+        self.port = None
+        self.https = None
+        self.mode = None
+        self.marker_no = None
+        self.update_cl = None
+        self.keepalive = None
+        self.proxy = None
+        self.proxy_host = None
+        self.proxy_port = None
+        self.proxy_auth = None
+        self.proxy_user = None
+        self.proxy_pass = None
+        self.reconnects = None
+        self.recon_delay = None
+        self.threads = None
+        self.request_delay = None
+        self.encoder = None
+
+
 class EventsFrame(wx.Frame):
     def __init__(self, *args, **kwargs):
         super(EventsFrame, self).__init__(*args, **kwargs)
@@ -28,9 +51,6 @@ class EventsFrame(wx.Frame):
     def OnRun(self, e):
         pass
 
-    def OnAbort(self, e):
-        pass
-
     def OnStop(self, e):
         pass
 
@@ -48,6 +68,7 @@ class LayoutFrame(EventsFrame):
     def __init__(self, *args, **kwargs):
         super(LayoutFrame, self).__init__(*args, **kwargs)
         self.panel = wx.Panel(self)
+        self.ops = Options()
         self.InitLayout()
 
     def InitLayout(self):
@@ -56,6 +77,7 @@ class LayoutFrame(EventsFrame):
         panel.SetSizer(sizer)
         data_box = wx.TextCtrl(panel, style=wx.TE_MULTILINE)
         data_box.SetValue(DEFAULT_REQUEST_DATA)
+        self.ops.data = data_box
         sizer.Add(data_box, pos=(0, 1), span=(30, 2), flag=wx.EXPAND)
 
         sizer.AddGrowableCol(1)
@@ -72,15 +94,18 @@ class LayoutFrame(EventsFrame):
         sizer.Add(host_lbl, pos=(3,4))
         host_txt = wx.TextCtrl(panel)
         host_txt.SetValue(DEFAULT_HOST)
+        self.ops.host = host_txt
         sizer.Add(host_txt, pos=(3, 5), span=(1, 2), flag=wx.EXPAND)
 
         port_lbl = wx.StaticText(panel, label="Port:")
         sizer.Add(port_lbl, pos=(4, 4))
         port_txt = wx.TextCtrl(panel)
         port_txt.SetValue(DEFAULT_PORT)
+        self.ops.port = port_txt
         sizer.Add(port_txt, pos=(4, 5), flag=wx.EXPAND)
         ssl_chk = wx.CheckBox(panel, label="HTTPS")
         ssl_chk.SetValue(DEFAULT_HTTPS)
+        self.ops.https = ssl_chk
         sizer.Add(ssl_chk, pos=(4, 6))
 
         sep1 = wx.StaticLine(panel, size=(300, 1))
@@ -90,16 +115,18 @@ class LayoutFrame(EventsFrame):
         sizer.Add(mode_lbl, pos=(8, 4))
         mode_names = ['Serial', 'Concurrent', 'Multiplex', 'Permuter']
         mode_cb = wx.ComboBox(panel, choices=mode_names,
-                         style=wx.CB_READONLY)
-        mode_cb.SetValue(DEFAULT_MODE)
+                              style=wx.CB_READONLY)
+        mode_cb.SetValue(mode_names[0])
+        self.ops.mode = mode_cb
         sizer.Add(mode_cb, pos=(8, 5), span=(1, 2))
 
         mark_lbl = wx.StaticText(panel, label="Marker #:")
-        sizer.Add(mark_lbl, pos=(9,4))
+        sizer.Add(mark_lbl, pos=(9, 4))
         mark_numbers = [str(i) for i in range(1, 17)]
         mark_cb = wx.ComboBox(panel, choices=mark_numbers,
                               style=wx.CB_READONLY)
         mark_cb.SetValue(mark_numbers[0])
+        self.ops.marker_no = mark_cb
         sizer.Add(mark_cb, pos=(9, 5))
 
         load_ps_btn = wx.Button(panel, label="Load File", size=(90, 30))
@@ -117,6 +144,7 @@ class LayoutFrame(EventsFrame):
         encdrs = ["None", "Hexadecimal", "Base 64", "MD5"]
         encdr_cb = wx.ComboBox(panel, choices=encdrs, style=wx.CB_READONLY)
         encdr_cb.SetValue(encdrs[0])
+        self.ops.encoder =encdr_cb
         sizer.Add(encdr_cb, pos=(16, 5), span=(1, 2), flag=wx.EXPAND)
 
         sep2 = wx.StaticLine(panel, size=(300, 1))
@@ -124,67 +152,79 @@ class LayoutFrame(EventsFrame):
 
         update_cl = wx.CheckBox(panel, label="Update Content Length Header")
         update_cl.SetValue(DEFAULT_UPDATE_CL)
+        self.ops.update_cl = update_cl
         sizer.Add(update_cl, pos=(20, 4), span=(1, 3))
 
         ka_cb = wx.CheckBox(panel, label="Keep-Alive")
         ka_cb.SetValue(DEFAULT_KEEP_ALIVE)
+        self.ops.keepalive = ka_cb
         sizer.Add(ka_cb, pos=(21, 4), span=(1, 3))
 
-        use_proxy = wx.CheckBox(panel, label="Use Proxy")
-        use_proxy.SetValue(DEFAULT_USE_PROXY)
-        sizer.Add(use_proxy, pos=(22, 4), span=(1, 3))
+        proxy = wx.CheckBox(panel, label="Use Proxy")
+        proxy.SetValue(DEFAULT_USE_PROXY)
+        self.ops.proxy = proxy
+        sizer.Add(proxy, pos=(22, 4), span=(1, 3))
 
-        host_lbl = wx.StaticText(panel, label="Proxy Host:")
-        sizer.Add(host_lbl, pos=(23,4), span=(1, 1))
-        host_txt = wx.TextCtrl(panel)
-        host_txt.SetValue(DEFAULT_PROXY_HOST)
-        sizer.Add(host_txt, pos=(23, 5), span=(1, 2), flag=wx.EXPAND)
-
-        phost_lbl = wx.StaticText(panel, label="Proxy Port:")
-        sizer.Add(phost_lbl, pos=(24,4), span=(1, 1))
+        phost_lbl = wx.StaticText(panel, label="Proxy Host:")
+        sizer.Add(phost_lbl, pos=(23,4), span=(1, 1))
         phost_txt = wx.TextCtrl(panel)
-        phost_txt.SetValue(DEFAULT_PROXY_PORT)
-        sizer.Add(phost_txt, pos=(24, 5), span=(1, 2), flag=wx.EXPAND)
+        phost_txt.SetValue(DEFAULT_PROXY_HOST)
+        self.ops.proxy_host = phost_txt
+        sizer.Add(phost_txt, pos=(23, 5), span=(1, 2), flag=wx.EXPAND)
 
-        use_proxy = wx.CheckBox(panel, label="Authenticate Proxy")
-        use_proxy.SetValue(DEFAULT_AUTHENTICATE_PROXY)
-        sizer.Add(use_proxy, pos=(25, 4), span=(1, 3))
+        pport_lbl = wx.StaticText(panel, label="Proxy Port:")
+        sizer.Add(pport_lbl, pos=(24,4), span=(1, 1))
+        pport_txt = wx.TextCtrl(panel)
+        pport_txt.SetValue(DEFAULT_PROXY_PORT)
+        self.ops.proxy_port = pport_txt
+        sizer.Add(pport_txt, pos=(24, 5), span=(1, 2), flag=wx.EXPAND)
 
-        user_lbl = wx.StaticText(panel, label="Proxy User:")
-        sizer.Add(user_lbl, pos=(26,4), span=(1, 1))
-        user_txt = wx.TextCtrl(panel)
-        user_txt.SetValue(DEFAULT_PROXY_USER)
-        sizer.Add(user_txt, pos=(26, 5), span=(1, 2), flag=wx.EXPAND)
+        proxy_auth = wx.CheckBox(panel, label="Authenticate Proxy")
+        proxy_auth.SetValue(DEFAULT_AUTHENTICATE_PROXY)
+        self.ops.proxy_auth = proxy_auth
+        sizer.Add(proxy_auth, pos=(25, 4), span=(1, 3))
 
-        pass_lbl = wx.StaticText(panel, label="Proxy Pass:")
-        sizer.Add(pass_lbl, pos=(27,4), span=(1, 1))
-        pass_txt = wx.TextCtrl(panel)
-        pass_txt.SetValue(DEFAULT_PROXY_PASS)
-        sizer.Add(pass_txt, pos=(27, 5), span=(1, 2), flag=wx.EXPAND)
+        puser_lbl = wx.StaticText(panel, label="Proxy User:")
+        sizer.Add(puser_lbl, pos=(26,4), span=(1, 1))
+        puser_txt = wx.TextCtrl(panel)
+        puser_txt.SetValue(DEFAULT_PROXY_USER)
+        self.ops.proxy_user = puser_txt
+        sizer.Add(puser_txt, pos=(26, 5), span=(1, 2), flag=wx.EXPAND)
+
+        ppass_lbl = wx.StaticText(panel, label="Proxy Pass:")
+        sizer.Add(ppass_lbl, pos=(27,4), span=(1, 1))
+        ppass_txt = wx.TextCtrl(panel)
+        ppass_txt.SetValue(DEFAULT_PROXY_PASS)
+        self.ops.proxy_pass = ppass_txt
+        sizer.Add(ppass_txt, pos=(27, 5), span=(1, 2), flag=wx.EXPAND)
 
         ra_lbl = wx.StaticText(panel, label="Reconnect Attempts:")
         sizer.Add(ra_lbl, pos=(28,4), span=(1, 2))
         ra_txt = wx.TextCtrl(panel)
-        ra_txt.SetValue(DEFAULT_NRA)
+        ra_txt.SetValue(DEFAULT_RA)
+        self.ops.reconnects = ra_txt
         sizer.Add(ra_txt, pos=(28, 6), span=(1, 1), flag=wx.EXPAND)
 
-        rd_lbl = wx.StaticText(panel, label="Reconnect Delay (ms):")
-        sizer.Add(rd_lbl, pos=(29,4), span=(1, 2))
-        rd_txt = wx.TextCtrl(panel)
-        rd_txt.SetValue(DEFAULT_NRD)
-        sizer.Add(rd_txt, pos=(29, 6), span=(1, 1), flag=wx.EXPAND)
+        rcd_lbl = wx.StaticText(panel, label="Reconnect Delay (ms):")
+        sizer.Add(rcd_lbl, pos=(29,4), span=(1, 2))
+        rcd_txt = wx.TextCtrl(panel)
+        rcd_txt.SetValue(DEFAULT_RCD)
+        self.ops.recon_delay = rcd_txt
+        sizer.Add(rcd_txt, pos=(29, 6), span=(1, 1), flag=wx.EXPAND)
 
-        nt_lbl = wx.StaticText(panel, label="Network Threads:")
-        sizer.Add(nt_lbl, pos=(30,4), span=(1, 2))
-        ct_txt = wx.TextCtrl(panel)
-        ct_txt.SetValue(DEFAULT_THREADS)
-        sizer.Add(ct_txt, pos=(30, 6), span=(1, 1), flag=wx.EXPAND)
+        threads_lbl = wx.StaticText(panel, label="Network Threads:")
+        sizer.Add(threads_lbl, pos=(30,4), span=(1, 2))
+        threads_txt = wx.TextCtrl(panel)
+        threads_txt.SetValue(DEFAULT_THREADS)
+        self.ops.threads = threads_txt
+        sizer.Add(threads_txt, pos=(30, 6), span=(1, 1), flag=wx.EXPAND)
 
-        rd_lbl = wx.StaticText(panel, label="Requests Delay (ms):")
-        sizer.Add(rd_lbl, pos=(31,4), span=(1, 2))
-        dbr_txt = wx.TextCtrl(panel)
-        dbr_txt.SetValue(DEFAULT_DBR)
-        sizer.Add(dbr_txt, pos=(31, 6), span=(1, 1), flag=wx.EXPAND)
+        rqd_lbl = wx.StaticText(panel, label="Requests Delay (ms):")
+        sizer.Add(rqd_lbl, pos=(31,4), span=(1, 2))
+        rqd_txt = wx.TextCtrl(panel)
+        rqd_txt.SetValue(DEFAULT_RQD)
+        self.ops.request_delay = rqd_txt
+        sizer.Add(rqd_txt, pos=(31, 6), span=(1, 1), flag=wx.EXPAND)
 
         add_mark_btn = wx.Button(panel, label="Add Markers", size=(120, 30))
         sizer.Add(add_mark_btn, pos=(30, 1), flag=wx.ALIGN_RIGHT)
@@ -193,7 +233,7 @@ class LayoutFrame(EventsFrame):
 
         progress_bar = wx.Gauge(panel, range=100)
         sizer.Add(progress_bar, pos=(31, 1), flag=wx.EXPAND, span=(1, 2))
-
+        self.progress_bar = progress_bar
         sizer.Add((10, 10), pos=(35, 1))
 
 
@@ -246,7 +286,6 @@ class MenuFrame(LayoutFrame):
         self.Bind(wx.EVT_MENU, self.OnExit, exit_mi)
         
         self.Bind(wx.EVT_MENU, self.OnRun, run_mi)
-        self.Bind(wx.EVT_MENU, self.OnAbort, abort_mi)
         self.Bind(wx.EVT_MENU, self.OnStop, stop_mi)
         self.Bind(wx.EVT_MENU, self.OnPreferences, preferences_mi)
         
@@ -270,7 +309,7 @@ class WindowFrame(MenuFrame):
         self.Center()
 
 
-class ToolbarFrame(WindowFrame ):
+class ToolbarFrame(WindowFrame):
     def __init__(self, *args, **kwargs):
         super(ToolbarFrame, self).__init__(*args, **kwargs)
         self.toolbar = None
@@ -295,6 +334,19 @@ class ToolbarFrame(WindowFrame ):
         toolbar.Bind(wx.EVT_TOOL, self.OnRun, run_tb)
         toolbar.Bind(wx.EVT_TOOL, self.OnStop, stop_tb)
         toolbar.Realize()
+
+
+class ControlFrame(ToolbarFrame):
+    def __init__(self, *args, **kwargs):
+        super(ToolbarFrame, self).__init__(*args, **kwargs)
+        self.InitControls()
+
+    def InitControls(self):
+        pass
+
+    def ClearOptions(self):
+        for opname, opobject in vars(self.ops).items():
+            setattr(self.ops, opname, "")
 
 
 def main():
