@@ -1,4 +1,7 @@
 import wx
+import pickle
+import re
+import requests
 
 from default_settings import *
 
@@ -12,7 +15,7 @@ class Options:
         self.mode = None
         self.marker_no = None
         self.update_cl = None
-        self.keepalive = None
+        self.keep_alive = None
         self.proxy = None
         self.proxy_host = None
         self.proxy_port = None
@@ -24,35 +27,175 @@ class Options:
         self.threads = None
         self.request_delay = None
         self.encoder = None
+        self.vs = [(self.data_isgood, "Invalid data"),
+                   (self.host_isgood, "Invalid host"),
+                   (self.port_isgood, "Invalid port"),
+                   (self.proxy_isgood, "Invalid proxy settings"),
+                   (self.reconnects_isgood, "Invalid number of reconnects"),
+                   (self.recon_delay_isgood, "Invalid reconnect delay"),
+                   (self.threads_isgood, "Invalid number of threads"),
+                   (self.req_delay_isgood, "Invalid request delay")]
+
+    def data_isgood(self):
+        return True
+
+    def valid_host(self, host):
+        template = "[A-Za-z0-9-.]+"
+        if re.match(template, host):
+            return True
+        else:
+            return False
+
+    def valid_port(self, port):
+        if port.isdigit():
+            if 0 < int(port) > 65535:
+                return False
+            else:
+                return True
+
+    def host_isgood(self):
+        host = self.host.GetValue()
+        if self.valid_host(host):
+            return True
+        else:
+            return False
+
+    def port_isgood(self):
+        port = self.port.GetValue()
+        if self.valid_port(port):
+            return True
+        else:
+            return False
+
+    def proxy_isgood(self):
+        if self.proxy.GetValue():
+            phost = self.proxy_host.GetValue()
+            pport = self.proxy_port.GetValue()
+            if not self.valid_host(phost):
+                return False
+            elif not self.valid_port(pport):
+                return False
+
+            pauth = self.proxy_auth.GetValue()
+            if not pauth:
+                return True
+            puser = self.proxy_user.GetValue()
+            ppass = self.proxy_pass.GetValue()
+            if not puser or not ppass:
+                return False
+            else:
+                return True
+
+    def reconnects_isgood(self):
+        r = self.reconnects.GetValue()
+        if r.isdigit():
+            return True
+        else:
+            return False
+
+    def recon_delay_isgood(self):
+        r = self.recon_delay.GetValue()
+        if r.isdigit and r >= 0:
+            return True
+        else:
+            return False
+
+    def threads_isgood(self):
+        t = self.threads.GetValue()
+        if t.isdigit() and 0 < t < 256:
+            return True
+        else:
+            return False
+
+    def req_delay_isgood(self):
+        r = self.request_delay.GetValue()
+        if r.isdigit() and r >= 0:
+            return True
+        else:
+            return False
+
+    def validate(self):
+        for func, err in self.vs:
+            if not func():
+                return err
+        return None
 
 
 class EventsFrame(wx.Frame):
     def __init__(self, *args, **kwargs):
         super(EventsFrame, self).__init__(*args, **kwargs)
+        self.ops = Options()
+        self.requests = []
+        self.running = False
+        self.requester = None
 
     def OnNew(self, e):
-        pass
+        for opname, opobject in vars(self.ops).items():
+            setattr(self.ops, opname, "")
 
     def OnOpen(self, e):
         pass
 
     def OnSave(self, e):
-        pass
+        with wx.FileDialog(self, "Save requests to file", wildcard="Pickle files (*.p)|*.p",
+                           style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as fileDialog:
+
+            if fileDialog.ShowModal() == wx.ID_CANCEL:
+                return  # the user changed their mind
+
+            # save the current contents in the file
+            pathname = fileDialog.GetPath()
+            with open(pathname, 'w') as fp:
+                pickle.dump(self.requests, fp)
 
     def OnOpenSetup(self, e):
-        pass
+        with wx.FileDialog(self, "Open setup file", wildcard="Pickle files (*.p)|*.p",
+                           style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
+            if fileDialog.ShowModal() == wx.ID_CANCEL:
+                return
+
+            pathname = fileDialog.GetPath()
+            with open(pathname, 'r') as fp:
+                setup = pickle.load(fp)
+                for (key, value) in vars(setup):
+                    getattr(self.ops, key).SetValue(value)
 
     def OnSaveSetup(self, e):
-        pass
+        with wx.FileDialog(self, "Save current setup to file", wildcard="Pickle files (*.p)|*.p",
+                           style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as fileDialog:
+            if fileDialog.ShowModal() == wx.ID_CANCEL:
+                return
+            pathname = fileDialog.GetPath()
+            with open(pathname, 'w') as fp:
+                pickle.dump(self.ops, fp)
 
     def OnExit(self, e):
         self.Close()
 
     def OnRun(self, e):
-        pass
+        if self.running:
+            wx.MessageBox("Engine is already running", 'Error', wx.OK | wx.ICON_EXCLAMATION)
+            return None
+        s = self.ops.validate()
+        if s:
+            wx.MessageBox(s, 'Input Error', wx.OK | wx.ICON_EXCLAMATION)
+            return None
+        else:
+            self.running = True
+            self.ToolBar.EnableTool(wx.ID_STOP, True)
+            self.ToolBar.EnableTool(wx.ID_EXECUTE, False)
+            return None
+
 
     def OnStop(self, e):
-        pass
+        if not self.running:
+            wx.MessageBox("Engine is not running", "Error", wx.OK | wx.ICON_INFORMATION)
+            return None
+        self.requester.stop_signal = True
+        self.running = False
+        self.ToolBar.EnableTool(wx.ID_STOP, False)
+        self.ToolBar.EnableTool(wx.ID_EXECUTE, True)
+        return None
 
     def OnPreferences(self, e):
         pass
@@ -68,7 +211,6 @@ class LayoutFrame(EventsFrame):
     def __init__(self, *args, **kwargs):
         super(LayoutFrame, self).__init__(*args, **kwargs)
         self.panel = wx.Panel(self)
-        self.ops = Options()
         self.InitLayout()
 
     def InitLayout(self):
@@ -85,10 +227,15 @@ class LayoutFrame(EventsFrame):
 
         run_btn = wx.Button(panel, label="Run", size=(120,30))
         sizer.Add(run_btn, pos=(0, 4))
+        run_btn.Bind(wx.EVT_BUTTON, self.OnRun)
+
         stop_btn = wx.Button(panel, label="Stop", size=(120,30))
         sizer.Add(stop_btn, pos=(0,5))
+        stop_btn.Bind(wx.EVT_BUTTON, self.OnStop)
+
         cnt_btn = wx.Button(panel, label="Continue", size=(120, 30))
         sizer.Add(cnt_btn, pos=(0,6))
+        cnt_btn.Bind(wx.EVT_BUTTON, self.OnRun)
 
         host_lbl = wx.StaticText(panel, label="Host:")
         sizer.Add(host_lbl, pos=(3,4))
@@ -157,7 +304,7 @@ class LayoutFrame(EventsFrame):
 
         ka_cb = wx.CheckBox(panel, label="Keep-Alive")
         ka_cb.SetValue(DEFAULT_KEEP_ALIVE)
-        self.ops.keepalive = ka_cb
+        self.ops.keep_alive = ka_cb
         sizer.Add(ka_cb, pos=(21, 4), span=(1, 3))
 
         proxy = wx.CheckBox(panel, label="Use Proxy")
@@ -235,7 +382,6 @@ class LayoutFrame(EventsFrame):
         sizer.Add(progress_bar, pos=(31, 1), flag=wx.EXPAND, span=(1, 2))
         self.progress_bar = progress_bar
         sizer.Add((10, 10), pos=(35, 1))
-
 
 
 class MenuFrame(LayoutFrame):
@@ -324,7 +470,6 @@ class ToolbarFrame(WindowFrame):
         exit_tb = toolbar.AddTool(wx.ID_EXIT, wx.Bitmap('res/icon/sign-out-alt.png'))
         run_tb = toolbar.AddTool(wx.ID_EXECUTE, wx.Bitmap('res/icon/play.png'))
         stop_tb = toolbar.AddTool(wx.ID_STOP, wx.Bitmap('res/icon/stop.png'))
-        toolbar.EnableTool(wx.ID_SAVE, False)
         toolbar.EnableTool(wx.ID_STOP, False)
         toolbar.EnableTool(wx.ID_EXECUTE, False)
         toolbar.Bind(wx.EVT_TOOL, self.OnNew, new_tb)
@@ -334,19 +479,6 @@ class ToolbarFrame(WindowFrame):
         toolbar.Bind(wx.EVT_TOOL, self.OnRun, run_tb)
         toolbar.Bind(wx.EVT_TOOL, self.OnStop, stop_tb)
         toolbar.Realize()
-
-
-class ControlFrame(ToolbarFrame):
-    def __init__(self, *args, **kwargs):
-        super(ToolbarFrame, self).__init__(*args, **kwargs)
-        self.InitControls()
-
-    def InitControls(self):
-        pass
-
-    def ClearOptions(self):
-        for opname, opobject in vars(self.ops).items():
-            setattr(self.ops, opname, "")
 
 
 def main():
