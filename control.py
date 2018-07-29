@@ -4,6 +4,7 @@ import re
 import requests
 
 from default_settings import *
+from constants import *
 
 
 class Options:
@@ -14,6 +15,9 @@ class Options:
         self.https = None
         self.mode = None
         self.marker_no = None
+        self.ps_box = None
+        self.ps_sets = dict()
+        self.add_p = None
         self.update_cl = None
         self.keep_alive = None
         self.proxy = None
@@ -174,7 +178,7 @@ class EventsFrame(wx.Frame):
 
     def OnRun(self, e):
         if self.running:
-            wx.MessageBox("Engine is already running", 'Error', wx.OK | wx.ICON_EXCLAMATION)
+            wx.MessageBox("Engine is already running", 'Error', wx.OK | wx.ICON_INFORMATION)
             return None
         s = self.ops.validate()
         if s:
@@ -201,10 +205,51 @@ class EventsFrame(wx.Frame):
         pass
 
     def OnHelp(self, e):
-        pass
+        wx.MessageBox(HELP_MSG, 'Help', wx.OK | wx.ICON_QUESTION)
 
     def OnAbout(self, e):
-        pass
+        wx.MessageBox(ABOUT_MSG, 'About', wx.OK | wx.ICON_INFORMATION)
+
+    def UpdatePSBox(self):
+        current_marker = self.ops.marker_no.GetValue()
+        self.ops.ps_box.Clear()
+        current_ps = self.ops.ps_sets.get(current_marker, [])
+        for p in current_ps:
+            self.ops.ps_box.Append(p)
+        return None
+
+    def OnLoadSetFile(self, e):
+        with wx.FileDialog(self, "Open payload set file", wildcard="All files (*.*)|*.*",
+                           style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
+            if fileDialog.ShowModal() == wx.ID_CANCEL:
+                return
+
+            pathname = fileDialog.GetPath()
+            with open(pathname, 'r') as fp:
+                ps = [i.rstrip() for i in fp.readlines()]
+                current_marker = self.ops.marker_no.GetValue()
+                self.ops.ps_sets[current_marker] = ps
+                self.UpdatePSBox()
+
+
+    def OnAddP(self, e):
+        new_p = self.ops.add_p.GetValue()
+        current_marker = self.ops.marker_no.GetValue()
+        current_ps = self.ops.ps_sets.get(current_marker)
+        if current_ps is None:
+            self.ops.ps_sets[current_marker] = [new_p, ]
+        else:
+            self.ops.ps_sets[current_marker].append(new_p)
+        self.UpdatePSBox()
+
+
+    def OnSelectPS(self, e):
+        new_no = self.ops.marker_no.GetValue()
+        new_ps = self.ops.ps_sets.get(new_no, [])
+        self.ops.ps_box.Clear()
+        for p in new_ps:
+            self.ops.ps_box.Append(p)
+        return None
 
 
 class LayoutFrame(EventsFrame):
@@ -275,16 +320,21 @@ class LayoutFrame(EventsFrame):
         mark_cb.SetValue(mark_numbers[0])
         self.ops.marker_no = mark_cb
         sizer.Add(mark_cb, pos=(9, 5))
+        mark_cb.Bind(wx.EVT_COMBOBOX, self.OnSelectPS)
 
         load_ps_btn = wx.Button(panel, label="Load File", size=(90, 30))
         sizer.Add(load_ps_btn, pos=(9, 6))
+        load_ps_btn.Bind(wx.EVT_BUTTON, self.OnLoadSetFile)
         ps_lb = wx.ListBox(panel)
+        self.ops.ps_box = ps_lb
         sizer.Add(ps_lb, pos=(10, 4), span=(5, 3), flag=wx.EXPAND)
 
         add_pl_btn = wx.Button(panel, label="Add", size=(90, 30))
         sizer.Add(add_pl_btn, pos=(15, 4))
         add_pl_txt = wx.TextCtrl(panel)
+        self.ops.add_p = add_pl_txt
         sizer.Add(add_pl_txt, pos=(15, 5), span=(1, 2), flag=wx.EXPAND)
+        add_pl_btn.Bind(wx.EVT_BUTTON, self.OnAddP)
 
         encdr_lbl = wx.StaticText(panel, label="Encoder:")
         sizer.Add(encdr_lbl, pos=(16, 4), span=(1, 1))
