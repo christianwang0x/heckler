@@ -183,8 +183,6 @@ class EventsFrame(wx.Frame):
         if self.running:
             wx.MessageBox("Engine is already running", 'Error', wx.OK | wx.ICON_INFORMATION)
             return None
-        time.sleep(10)
-        return
 
         s = self.ops.validate()
         if s:
