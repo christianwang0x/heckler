@@ -2,6 +2,7 @@ import wx
 import pickle
 import re
 import requests
+import time
 
 from default_settings import *
 from constants import *
@@ -134,10 +135,10 @@ class EventsFrame(wx.Frame):
         self.requester = None
         self.hfont = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT)
         self.hfont.SetPointSize(9)
+        self.fwfont = wx.Font(9, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
 
     def OnNew(self, e):
-        for opname, opobject in vars(self.ops).items():
-            setattr(self.ops, opname, "")
+        pass
 
     def OnOpen(self, e):
         pass
@@ -182,6 +183,9 @@ class EventsFrame(wx.Frame):
         if self.running:
             wx.MessageBox("Engine is already running", 'Error', wx.OK | wx.ICON_INFORMATION)
             return None
+        time.sleep(10)
+        return
+
         s = self.ops.validate()
         if s:
             wx.MessageBox(s, 'Input Error', wx.OK | wx.ICON_EXCLAMATION)
@@ -241,7 +245,26 @@ class EventsFrame(wx.Frame):
         if current_ps is None:
             self.ops.ps_sets[current_marker] = [new_p, ]
         else:
-            self.ops.ps_sets[current_marker].append(new_p)
+            current_ps.append(new_p)
+        self.UpdatePSBox()
+
+    def OnDelP(self, e):
+        current_marker = self.ops.marker_no.GetValue()
+        current_ps = self.ops.ps_sets.get(current_marker)
+        if not current_ps:
+            return
+        selected = self.ops.ps_box.GetSelections()
+        if not selected:
+            current_ps.pop()
+        else:
+            for i in selected:
+                current_ps.pop(i)
+        self.UpdatePSBox()
+
+
+    def OnClearPS(self, e):
+        current_marker = self.ops.marker_no.GetValue()
+        self.ops.ps_sets[current_marker] = []
         self.UpdatePSBox()
 
 
@@ -251,6 +274,24 @@ class EventsFrame(wx.Frame):
         self.ops.ps_box.Clear()
         for p in new_ps:
             self.ops.ps_box.Append(p)
+        return None
+
+    def OnAddMarkers(self, e):
+        index = self.ops.data.GetInsertionPoint()
+        sindex = index
+        squote = chr(0xab)
+        equote = chr(0xbb)
+        oldtext = self.ops.data.GetValue()
+        newtext = oldtext[:sindex] + squote
+        newtext += equote + oldtext[sindex:]
+        self.ops.data.SetValue(newtext)
+        return None
+
+    def OnClearMarkers(self, e):
+        oldtext = self.ops.data.GetValue()
+        newtext = oldtext.replace(chr(0xab), '')
+        newtext = newtext.replace(chr(0xbb), '')
+        self.ops.data.SetValue(newtext)
         return None
 
 
@@ -265,6 +306,7 @@ class LayoutFrame(EventsFrame):
         sizer = wx.GridBagSizer(1, 1)
         panel.SetSizer(sizer)
         data_box = wx.TextCtrl(panel, style=wx.TE_MULTILINE)
+        data_box.SetFont(self.fwfont)
         data_box.SetValue(DEFAULT_REQUEST_DATA)
         self.ops.data = data_box
         sizer.Add(data_box, pos=(0, 1), span=(30, 2), flag=wx.EXPAND)
@@ -272,17 +314,17 @@ class LayoutFrame(EventsFrame):
         sizer.AddGrowableCol(1)
         sizer.AddGrowableRow(18)
 
-        run_btn = wx.Button(panel, label="Run", size=(120,30))
+        run_btn = wx.Button(panel, label="Run", size=(120,25))
         run_btn.SetFont(self.hfont)
         sizer.Add(run_btn, pos=(0, 4))
         run_btn.Bind(wx.EVT_BUTTON, self.OnRun)
 
-        stop_btn = wx.Button(panel, label="Stop", size=(120,30))
+        stop_btn = wx.Button(panel, label="Stop", size=(120,25))
         stop_btn.SetFont(self.hfont)
         sizer.Add(stop_btn, pos=(0,5))
         stop_btn.Bind(wx.EVT_BUTTON, self.OnStop)
 
-        cnt_btn = wx.Button(panel, label="Continue", size=(120, 30))
+        cnt_btn = wx.Button(panel, label="Continue", size=(120, 25))
         cnt_btn.SetFont(self.hfont)
         sizer.Add(cnt_btn, pos=(0,6))
         cnt_btn.Bind(wx.EVT_BUTTON, self.OnRun)
@@ -336,18 +378,35 @@ class LayoutFrame(EventsFrame):
         sizer.Add(mark_cb, pos=(9, 5))
         mark_cb.Bind(wx.EVT_COMBOBOX, self.OnSelectPS)
 
-        load_ps_btn = wx.Button(panel, label="Load File", size=(90, 30))
+        load_ps_btn = wx.Button(panel, label="Load File", size=(90, 25))
         load_ps_btn.SetFont(self.hfont)
         sizer.Add(load_ps_btn, pos=(9, 6))
         load_ps_btn.Bind(wx.EVT_BUTTON, self.OnLoadSetFile)
+
         ps_lb = wx.ListBox(panel)
         ps_lb.SetFont(self.hfont)
         self.ops.ps_box = ps_lb
-        sizer.Add(ps_lb, pos=(10, 4), span=(5, 3), flag=wx.EXPAND)
+        sizer.Add(ps_lb, pos=(10, 5), span=(5, 2), flag=wx.EXPAND)
 
-        add_pl_btn = wx.Button(panel, label="Add", size=(90, 30))
+        ps_label = wx.StaticText(panel, label="Payload list:")
+        # ps_label.SetFont(self.hfont)
+        sizer.Add(ps_label, pos=(11, 4))
+
+        ps_clr_btn = wx.Button(panel, label="Clear", size=(90, 25))
+        ps_clr_btn.Bind(wx.EVT_BUTTON, self.OnClearPS)
+        ps_clr_btn.SetFont(self.hfont)
+        sizer.Add(ps_clr_btn, pos=(13, 4))
+
+        ps_del_btn = wx.Button(panel, label="Delete", size=(90, 25))
+        ps_del_btn.Bind(wx.EVT_BUTTON, self.OnDelP)
+        ps_del_btn.SetFont(self.hfont)
+        sizer.Add(ps_del_btn, pos=(14, 4))
+
+
+        add_pl_btn = wx.Button(panel, label="Add", size=(90, 25))
         add_pl_btn.SetFont(self.hfont)
         sizer.Add(add_pl_btn, pos=(15, 4))
+
         add_pl_txt = wx.TextCtrl(panel)
         add_pl_txt.SetFont(self.hfont)
         self.ops.add_p = add_pl_txt
@@ -463,10 +522,13 @@ class LayoutFrame(EventsFrame):
         self.ops.request_delay = rqd_txt
         sizer.Add(rqd_txt, pos=(31, 6), span=(1, 1), flag=wx.EXPAND)
 
-        add_mark_btn = wx.Button(panel, label="Add Markers", size=(120, 30))
+        add_mark_btn = wx.Button(panel, label="Add Markers", size=(120, 25))
         add_mark_btn.SetFont(self.hfont)
+        add_mark_btn.Bind(wx.EVT_BUTTON, self.OnAddMarkers)
         sizer.Add(add_mark_btn, pos=(30, 1), flag=wx.ALIGN_RIGHT)
-        clr_mark_btn = wx.Button(panel, label="Clear Markers", size=(120, 30))
+
+        clr_mark_btn = wx.Button(panel, label="Clear Markers", size=(120, 25))
+        clr_mark_btn.Bind(wx.EVT_BUTTON, self.OnClearMarkers)
         clr_mark_btn.SetFont(self.hfont)
         sizer.Add(clr_mark_btn, pos=(30, 2))
 
@@ -492,11 +554,11 @@ class MenuFrame(LayoutFrame):
         save_setup_mi = wx.MenuItem(file_menu, wx.ID_ANY, '&Save Setup')
         exit_mi = wx.MenuItem(file_menu, wx.ID_ANY, 'Exit')
 
-        [ file_menu.AppendItem(i) for i in (new_mi, open_mi, save_mi) ]
+        [ file_menu.Append(i) for i in (new_mi, open_mi, save_mi) ]
         file_menu.AppendSeparator()
-        [ file_menu.AppendItem(i) for i in (open_setup_mi, save_setup_mi) ]
+        [ file_menu.Append(i) for i in (open_setup_mi, save_setup_mi) ]
         file_menu.AppendSeparator()
-        file_menu.AppendItem(exit_mi)
+        file_menu.Append(exit_mi)
         
         control_menu = wx.Menu()
         run_mi = wx.MenuItem(control_menu, wx.ID_ANY, '&Run')
@@ -504,16 +566,16 @@ class MenuFrame(LayoutFrame):
         stop_mi = wx.MenuItem(control_menu, wx.ID_ANY, '&Stop')
         preferences_mi = wx.MenuItem(control_menu, wx.ID_ANY, '&Preferences')
 
-        [ control_menu.AppendItem(i) for i in (run_mi, abort_mi, stop_mi)]
+        [ control_menu.Append(i) for i in (run_mi, abort_mi, stop_mi)]
         control_menu.AppendSeparator()
-        control_menu.AppendItem(preferences_mi)
+        control_menu.Append(preferences_mi)
 
         help_menu = wx.Menu()
         help_mi = wx.MenuItem(help_menu, wx.ID_ANY, '&Help')
         about_mi = wx.MenuItem(help_menu, wx.ID_ANY, '&About')
 
-        help_menu.AppendItem(help_mi)
-        help_menu.AppendItem(about_mi)
+        help_menu.Append(help_mi)
+        help_menu.Append(about_mi)
         help_menu.AppendSeparator()
 
         self.Bind(wx.EVT_MENU, self.OnNew, new_mi)
@@ -542,7 +604,7 @@ class WindowFrame(MenuFrame):
         self.InitWindow()
         
     def InitWindow(self):
-        self.SetSize((860, 860))
+        self.SetSize((860, 800))
         self.SetTitle('Heckler Control')
         self.Center()
 
@@ -556,12 +618,12 @@ class ToolbarFrame(WindowFrame):
     def InitToolbar(self):
         toolbar = wx.ToolBar(self, wx.ID_ANY, pos=(0, 0))
         self.ToolBar = toolbar
-        new_tb = toolbar.AddTool(wx.ID_ANY, wx.Bitmap('res/icon/file.png'))
-        open_tb = toolbar.AddTool(wx.ID_OPEN, wx.Bitmap('res/icon/folder-open.png'))
-        save_tb = toolbar.AddTool(wx.ID_SAVE, wx.Bitmap('res/icon/save.png'))
-        exit_tb = toolbar.AddTool(wx.ID_EXIT, wx.Bitmap('res/icon/sign-out-alt.png'))
-        run_tb = toolbar.AddTool(wx.ID_EXECUTE, wx.Bitmap('res/icon/play.png'))
-        stop_tb = toolbar.AddTool(wx.ID_STOP, wx.Bitmap('res/icon/stop.png'))
+        new_tb = toolbar.AddTool(wx.ID_NEW, "New", wx.Bitmap('res/icon/file.png'))
+        open_tb = toolbar.AddTool(wx.ID_OPEN, "Open", wx.Bitmap('res/icon/folder-open.png'))
+        save_tb = toolbar.AddTool(wx.ID_SAVE, "Save", wx.Bitmap('res/icon/save.png'))
+        exit_tb = toolbar.AddTool(wx.ID_EXIT, "Exit", wx.Bitmap('res/icon/sign-out-alt.png'))
+        run_tb = toolbar.AddTool(wx.ID_EXECUTE, "Run", wx.Bitmap('res/icon/play.png'))
+        stop_tb = toolbar.AddTool(wx.ID_STOP, "Stop", wx.Bitmap('res/icon/stop.png'))
         toolbar.EnableTool(wx.ID_STOP, False)
         toolbar.EnableTool(wx.ID_EXECUTE, False)
         toolbar.Bind(wx.EVT_TOOL, self.OnNew, new_tb)
