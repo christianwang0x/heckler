@@ -1,11 +1,12 @@
 import wx
 import pickle
+import engine
 from options import Options
 from constants import *
 
 
 class EventsPanel(wx.Panel):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, parent_window, *args, **kwargs):
         super(EventsPanel, self).__init__(*args, **kwargs)
         self.ops = Options()
         self.requests = []
@@ -14,13 +15,42 @@ class EventsPanel(wx.Panel):
         self.fwfont = wx.Font(9, wx.FONTFAMILY_TELETYPE,
                               wx.FONTSTYLE_NORMAL,
                               wx.FONTWEIGHT_NORMAL)
+        self.parent_window = parent_window
         self.engine = None
 
     def OnRun(self, e):
-        pass
+        if self.running:
+            wx.MessageBox("Engine is already running", 'Error', wx.OK | wx.ICON_INFORMATION)
+            return None
+
+        s = self.ops.validate()
+        if s:
+            wx.MessageBox(s, 'Input Error', wx.OK | wx.ICON_EXCLAMATION)
+            return None
+        else:
+            self.running = True
+            self.parent_window.ToolBar.EnableTool(wx.ID_STOP, True)
+            self.parent_window.ToolBar.EnableTool(wx.ID_EXECUTE, False)
+            host = str(self.ops.host.GetValue())
+            port = int(self.ops.port.GetValue())
+            threads = int(self.ops.threads.GetValue())
+            _ssl = int(self.ops.https.GetValue())
+            template = self.ops.data.GetValue()
+            pset = self.ops.ps_sets
+            E = engine.Engine(host, port, threads)
+            responses = E.run(template, pset, _ssl)
+            wx.MessageBox(str(responses), 'Done', wx.OK)
+            return None
 
     def OnStop(self, e):
-        pass
+        if not self.running:
+            wx.MessageBox("Engine is not running", "Error", wx.OK | wx.ICON_INFORMATION)
+            return None
+        # self.requester.stop_signal = True
+        self.running = False
+        self.parent_window.ToolBar.EnableTool(wx.ID_STOP, False)
+        self.parent_window.ToolBar.EnableTool(wx.ID_EXECUTE, True)
+        return None
 
     def OnNew(self, e):
         pass

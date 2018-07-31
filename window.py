@@ -1,6 +1,5 @@
 import wx
-import engine
-from layout import ControlPanel
+from control import ControlPanel
 
 class MenuFrame(wx.Frame):
     def __init__(self, *args, **kwargs):
@@ -11,45 +10,8 @@ class MenuFrame(wx.Frame):
         self.notebook.AddPage(self.control_panel, "Control")
         sizer = wx.BoxSizer()
         sizer.Add(self.notebook, -1, wx.EXPAND | wx.ALL)
-#        sizer.Add(self.control_panel, -1, wx.EXPAND)
         self.super_panel.SetSizer(sizer)
-        self.running = False
-        self.requester = None
         self.InitMenu()
-
-    def OnRun(self, e):
-        if self.running:
-            wx.MessageBox("Engine is already running", 'Error', wx.OK | wx.ICON_INFORMATION)
-            return None
-
-        s = self.control_panel.ops.validate()
-        if s:
-            wx.MessageBox(s, 'Input Error', wx.OK | wx.ICON_EXCLAMATION)
-            return None
-        else:
-            self.running = True
-            self.ToolBar.EnableTool(wx.ID_STOP, True)
-            self.ToolBar.EnableTool(wx.ID_EXECUTE, False)
-            host = str(self.control_panel.ops.host.GetValue())
-            port = int(self.control_panel.ops.port.GetValue())
-            threads = int(self.control_panel.ops.threads.GetValue())
-            _ssl = int(self.control_panel.ops.https.GetValue())
-            template = self.control_panel.ops.data.GetValue()
-            pset = self.control_panel.ops.ps_sets
-            E = engine.Engine(host, port, threads)
-            responses = E.run(template, pset, _ssl)
-            wx.MessageBox(str(responses), 'Done', wx.OK)
-            return None
-
-    def OnStop(self, e):
-        if not self.running:
-            wx.MessageBox("Engine is not running", "Error", wx.OK | wx.ICON_INFORMATION)
-            return None
-        # self.requester.stop_signal = True
-        self.running = False
-        self.ToolBar.EnableTool(wx.ID_STOP, False)
-        self.ToolBar.EnableTool(wx.ID_EXECUTE, True)
-        return None
 
     def InitMenu(self):
         menubar = wx.MenuBar()
