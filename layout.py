@@ -1,13 +1,14 @@
 from default_settings import *
-from events import EventsFrame
+from events import EventsPanel
 import wx
 
 
-class LayoutFrame(EventsFrame):
-    def __init__(self, *args, **kwargs):
-        super(LayoutFrame, self).__init__(*args, **kwargs)
-        self.panel = wx.Panel(self)
+class LayoutPanel(EventsPanel):
+    def __init__(self, parent_window, *args, **kwargs):
+        super(LayoutPanel, self).__init__(*args, **kwargs)
+        self.panel = wx.Panel(self, size=(800, 800))
         self.progress_bar = None
+        self.parent_window = parent_window
         self.InitLayout()
 
     def InitLayout(self):
@@ -26,17 +27,17 @@ class LayoutFrame(EventsFrame):
         run_btn = wx.Button(panel, label="Run", size=(120,25))
         run_btn.SetFont(self.hfont)
         sizer.Add(run_btn, pos=(0, 4))
-        run_btn.Bind(wx.EVT_BUTTON, self.OnRun)
+        run_btn.Bind(wx.EVT_BUTTON, self.parent_window.OnRun)
 
         stop_btn = wx.Button(panel, label="Stop", size=(120,25))
         stop_btn.SetFont(self.hfont)
         sizer.Add(stop_btn, pos=(0,5))
-        stop_btn.Bind(wx.EVT_BUTTON, self.OnStop)
+        stop_btn.Bind(wx.EVT_BUTTON, self.parent_window.OnStop)
 
         cnt_btn = wx.Button(panel, label="Continue", size=(120, 25))
         cnt_btn.SetFont(self.hfont)
         sizer.Add(cnt_btn, pos=(0,6))
-        cnt_btn.Bind(wx.EVT_BUTTON, self.OnRun)
+        cnt_btn.Bind(wx.EVT_BUTTON, self.parent_window.OnRun)
 
         host_lbl = wx.StaticText(panel, label="Host:")
         host_lbl.SetFont(self.hfont)

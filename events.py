@@ -1,23 +1,26 @@
 import wx
 import pickle
-import engine
 from options import Options
 from constants import *
 
 
-class EventsFrame(wx.Frame):
+class EventsPanel(wx.Panel):
     def __init__(self, *args, **kwargs):
-        super(EventsFrame, self).__init__(*args, **kwargs)
+        super(EventsPanel, self).__init__(*args, **kwargs)
         self.ops = Options()
         self.requests = []
-        self.running = False
-        self.requester = None
         self.hfont = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT)
         self.hfont.SetPointSize(9)
         self.fwfont = wx.Font(9, wx.FONTFAMILY_TELETYPE,
                               wx.FONTSTYLE_NORMAL,
                               wx.FONTWEIGHT_NORMAL)
         self.engine = None
+
+    def OnRun(self, e):
+        pass
+
+    def OnStop(self, e):
+        pass
 
     def OnNew(self, e):
         pass
@@ -61,45 +64,8 @@ class EventsFrame(wx.Frame):
     def OnExit(self, e):
         self.Close()
 
-    def OnRun(self, e):
-        if self.running:
-            wx.MessageBox("Engine is already running", 'Error', wx.OK | wx.ICON_INFORMATION)
-            return None
-
-        s = self.ops.validate()
-        if s:
-            wx.MessageBox(s, 'Input Error', wx.OK | wx.ICON_EXCLAMATION)
-            return None
-        else:
-            self.running = True
-            self.ToolBar.EnableTool(wx.ID_STOP, True)
-            self.ToolBar.EnableTool(wx.ID_EXECUTE, False)
-            host = str(self.ops.host.GetValue())
-            port = int(self.ops.port.GetValue())
-            threads = int(self.ops.threads.GetValue())
-            _ssl = int(self.ops.https.GetValue())
-            template = self.ops.data.GetValue()
-            pset = self.ops.ps_sets
-            E = engine.Engine(host, port, threads)
-            responses = E.run(template, pset, _ssl)
-            wx.MessageBox(str(responses), 'Done', wx.OK)
-
-            return None
-
-
-    def OnStop(self, e):
-        if not self.running:
-            wx.MessageBox("Engine is not running", "Error", wx.OK | wx.ICON_INFORMATION)
-            return None
-        self.requester.stop_signal = True
-        self.running = False
-        self.ToolBar.EnableTool(wx.ID_STOP, False)
-        self.ToolBar.EnableTool(wx.ID_EXECUTE, True)
-        return None
-
     def OnPreferences(self, e):
-        template = self.ops.data.GetValue()
-        wx.MessageBox(engine.gen_requests(template, [['abc', 'def']]).__next__())
+        pass
 
     def OnHelp(self, e):
         wx.MessageBox(HELP_MSG, 'Help', wx.OK | wx.ICON_QUESTION)
