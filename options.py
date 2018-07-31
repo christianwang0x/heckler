@@ -83,6 +83,8 @@ class Options:
                 return False
             else:
                 return True
+        else:
+            return True
 
     def reconnects_isgood(self):
         r = self.reconnects.GetValue()
@@ -93,21 +95,21 @@ class Options:
 
     def recon_delay_isgood(self):
         r = self.recon_delay.GetValue()
-        if r.isdigit and r >= 0:
+        if r.isdigit and int(r) >= 0:
             return True
         else:
             return False
 
     def threads_isgood(self):
         t = self.threads.GetValue()
-        if t.isdigit() and 0 < t < 256:
+        if t.isdigit() and 0 <int(t) < 256:
             return True
         else:
             return False
 
     def req_delay_isgood(self):
         r = self.request_delay.GetValue()
-        if r.isdigit() and r >= 0:
+        if r.isdigit() and int(r) >= 0:
             return True
         else:
             return False

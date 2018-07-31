@@ -14,7 +14,10 @@ class EventsFrame(wx.Frame):
         self.requester = None
         self.hfont = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT)
         self.hfont.SetPointSize(9)
-        self.fwfont = wx.Font(9, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
+        self.fwfont = wx.Font(9, wx.FONTFAMILY_TELETYPE,
+                              wx.FONTSTYLE_NORMAL,
+                              wx.FONTWEIGHT_NORMAL)
+        self.engine = None
 
     def OnNew(self, e):
         pass
@@ -71,6 +74,16 @@ class EventsFrame(wx.Frame):
             self.running = True
             self.ToolBar.EnableTool(wx.ID_STOP, True)
             self.ToolBar.EnableTool(wx.ID_EXECUTE, False)
+            host = str(self.ops.host.GetValue())
+            port = int(self.ops.port.GetValue())
+            threads = int(self.ops.threads.GetValue())
+            _ssl = int(self.ops.https.GetValue())
+            template = self.ops.data.GetValue()
+            pset = self.ops.ps_sets
+            E = engine.Engine(host, port, threads)
+            responses = E.run(template, pset, _ssl)
+            wx.MessageBox(str(responses), 'Done', wx.OK)
+
             return None
 
 

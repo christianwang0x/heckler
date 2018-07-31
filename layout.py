@@ -110,7 +110,6 @@ class LayoutFrame(EventsFrame):
         ps_del_btn.SetFont(self.hfont)
         sizer.Add(ps_del_btn, pos=(14, 4))
 
-
         add_pl_btn = wx.Button(panel, label="Add", size=(90, 25))
         add_pl_btn.SetFont(self.hfont)
         sizer.Add(add_pl_btn, pos=(15, 4))
