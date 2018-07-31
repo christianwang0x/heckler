@@ -38,8 +38,8 @@ class EventsPanel(wx.Panel):
             template = self.ops.data.GetValue()
             pset = self.ops.ps_sets
             E = engine.Engine(host, port, threads)
-            responses = E.run(template, pset, _ssl)
-            wx.MessageBox(str(responses), 'Done', wx.OK)
+            reqs = E.run(template, pset, _ssl)
+            self.parent_window.CreateViewer(reqs)
             return None
 
     def OnStop(self, e):

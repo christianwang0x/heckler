@@ -1,5 +1,6 @@
 import wx
 from control import ControlPanel
+from viewer import ViewerPanel
 
 class MenuFrame(wx.Frame):
     def __init__(self, *args, **kwargs):
@@ -11,7 +12,10 @@ class MenuFrame(wx.Frame):
         sizer = wx.BoxSizer()
         sizer.Add(self.notebook, -1, wx.EXPAND | wx.ALL)
         self.super_panel.SetSizer(sizer)
+ #       self.viewer_panel = ViewerPanel(reqs, self, self.notebook)
+#        self.notebook.AddPage(self.viewer_panel, "Viewer")
         self.InitMenu()
+
 
     def InitMenu(self):
         menubar = wx.MenuBar()
@@ -68,6 +72,11 @@ class MenuFrame(wx.Frame):
 
         self.SetMenuBar(menubar)
 
+    def CreateViewer(self, reqs):
+        self.viewer_panel = ViewerPanel(self,reqs, self.notebook)
+        self.notebook.AddPage(self.viewer_panel, "Viewer")
+        return None
+
 
 class WindowFrame(MenuFrame):
     def __init__(self, *args, **kwargs):
@@ -75,7 +84,7 @@ class WindowFrame(MenuFrame):
         self.InitWindow()
 
     def InitWindow(self):
-        self.SetSize((860, 850))
+        self.SetSize((1200, 850))
         self.SetTitle('Heckler Control')
         self.Center()
 

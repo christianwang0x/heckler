@@ -102,7 +102,7 @@ class Engine:
                 t = self.loop.create_task(self.tcp_request(request))
             tasks.append(t)
         await asyncio.wait(tasks)
-        return tasks
+        return [task.result() for task in tasks]
 
     def run(self, template, param_set, _ssl):
         requests = self.loop.run_until_complete(
