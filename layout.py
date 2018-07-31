@@ -7,6 +7,7 @@ class LayoutFrame(EventsFrame):
     def __init__(self, *args, **kwargs):
         super(LayoutFrame, self).__init__(*args, **kwargs)
         self.panel = wx.Panel(self)
+        self.progress_bar = None
         self.InitLayout()
 
     def InitLayout(self):
@@ -96,8 +97,7 @@ class LayoutFrame(EventsFrame):
         self.ops.ps_box = ps_lb
         sizer.Add(ps_lb, pos=(10, 5), span=(5, 2), flag=wx.EXPAND)
 
-        ps_label = wx.StaticText(panel, label="Payload list:")
-        # ps_label.SetFont(self.hfont)
+        ps_label = wx.StaticText(panel, label="Parameter list:")
         sizer.Add(ps_label, pos=(11, 4))
 
         ps_clr_btn = wx.Button(panel, label="Clear", size=(90, 25))

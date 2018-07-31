@@ -1,7 +1,9 @@
 import wx
 import pickle
+import engine
 from options import Options
 from constants import *
+
 
 class EventsFrame(wx.Frame):
     def __init__(self, *args, **kwargs):
@@ -83,7 +85,8 @@ class EventsFrame(wx.Frame):
         return None
 
     def OnPreferences(self, e):
-        pass
+        template = self.ops.data.GetValue()
+        wx.MessageBox(engine.gen_requests(template, [['abc', 'def']]).__next__())
 
     def OnHelp(self, e):
         wx.MessageBox(HELP_MSG, 'Help', wx.OK | wx.ICON_QUESTION)
@@ -100,7 +103,7 @@ class EventsFrame(wx.Frame):
         return None
 
     def OnLoadSetFile(self, e):
-        with wx.FileDialog(self, "Open payload set file", wildcard="All files (*.*)|*.*",
+        with wx.FileDialog(self, "Open parameter file", wildcard="All files (*.*)|*.*",
                            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
             if fileDialog.ShowModal() == wx.ID_CANCEL:
                 return
