@@ -3,9 +3,9 @@ from events import EventsPanel
 import wx
 
 
-class LayoutPanel(EventsPanel):
+class ControlPanel(EventsPanel):
     def __init__(self, parent_window, *args, **kwargs):
-        super(LayoutPanel, self).__init__(*args, **kwargs)
+        super(ControlPanel, self).__init__(*args, **kwargs)
         self.panel = wx.Panel(self, size=(800, 800))
         self.progress_bar = None
         self.parent_window = parent_window

@@ -1,13 +1,13 @@
 import wx
 import engine
-from layout import LayoutPanel
+from layout import ControlPanel
 
 class MenuFrame(wx.Frame):
     def __init__(self, *args, **kwargs):
         super(MenuFrame, self).__init__(*args, **kwargs)
         self.super_panel = wx.Panel(self)
         self.notebook = wx.Notebook(self.super_panel)
-        self.control_panel = LayoutPanel(self, self.notebook)
+        self.control_panel = ControlPanel(self, self.notebook)
         self.notebook.AddPage(self.control_panel, "Control")
         sizer = wx.BoxSizer()
         sizer.Add(self.notebook, -1, wx.EXPAND | wx.ALL)
