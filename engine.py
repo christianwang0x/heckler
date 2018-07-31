@@ -1,6 +1,15 @@
 import asyncio
 import ssl
+import time
 
+class Request():
+    def __init__(self, template, params):
+        self.template = template
+        self.params = params
+        self.request_time = None
+        self.response_time = None
+        self.request = None
+        self.response = None
 
 class EngineException(Exception):
     def __init__(self, message, errors):
@@ -38,12 +47,13 @@ class Engine:
         right_char = chr(0xbb)
         if not template.count(left_char) == template.count(right_char) == len(param_list):
             raise EngineException("Bad markers or parameters", "")
-        req = template
+        req = Request(template, param_list)
+        req.request = template
         for p in param_list:
-            lb_index = req.index(left_char)
-            rb_index = req.index(right_char)
-            req = req[:lb_index] + p + req[rb_index + 1:]
-            req = self.add_req_newlines(req)
+            lb_index = req.request.index(left_char)
+            rb_index = req.request.index(right_char)
+            req.request = req.request[:lb_index] + p + req.request[rb_index + 1:]
+            req.request = self.add_req_newlines(req.request)
         return req
 
 
@@ -59,22 +69,29 @@ class Engine:
         async with self.semaphore:
             reader, writer = await asyncio.open_connection(
                 self.host, int(self.port), loop=self.loop)
-            writer.write(request.encode())
+            request_data = request.request
+            writer.write(request_data.encode())
             await writer.drain()
+            request.request_time = time.time()
             data = await reader.read(1024)
             writer.close()
-            return data
+            request.response_time = time.time()
+            request.response = data
+            return request
 
     async def ssl_request(self, request):
         async with self.semaphore:
             reader, writer = await asyncio.open_connection(
-                self.host, self.port, ssl=self.context, loop=self.loop)
-            writer.write(request.encode())
+                self.host, int(self.port), loop=self.loop, ssl=self.context)
+            request_data = request.request
+            writer.write(request_data.encode())
             await writer.drain()
-            writer.close()
+            request.request_time = time.time()
             data = await reader.read(1024)
             writer.close()
-            return data
+            request.response_time = time.time()
+            request.response = data
+            return request
 
     async def engine(self, template, param_set, _ssl):
         tasks = []
@@ -88,6 +105,6 @@ class Engine:
         return tasks
 
     def run(self, template, param_set, _ssl):
-        responses = self.loop.run_until_complete(
+        requests = self.loop.run_until_complete(
             self.engine(template, param_set, _ssl))
-        return responses
+        return requests
