@@ -90,7 +90,7 @@ class ControlPanel(EventsPanel):
         load_ps_btn = wx.Button(self, label="Load File", size=(90, 25))
         load_ps_btn.SetFont(self.hfont)
         sizer.Add(load_ps_btn, pos=(9, 6))
-        load_ps_btn.Bind(wx.EVT_BUTTON, self.OnLoadSetFile)
+        load_ps_btn.Bind(wx.EVT_BUTTON, self.OnLoadParamFile)
 
         ps_lb = wx.ListBox(self)
         ps_lb.SetFont(self.hfont)

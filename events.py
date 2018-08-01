@@ -33,22 +33,23 @@ class EventsPanel(wx.Panel):
             self.running = True
             self.parent_window.ToolBar.EnableTool(wx.ID_STOP, True)
             self.parent_window.ToolBar.EnableTool(wx.ID_EXECUTE, False)
-            host = str(self.ops.host.GetValue())
-            port = int(self.ops.port.GetValue())
-            threads = int(self.ops.threads.GetValue())
+
+
             _ssl = int(self.ops.https.GetValue())
             template = self.ops.data.GetValue()
             encoder = self.ops.encoder.GetValue()
             self.ops.encode_all_payloads(encoder)
             pset = self.ops.ps_sets
             mode = self.ops.mode.GetValue()
-            timeout = int(self.ops.timeout.GetValue())
-            E = engine.Engine(host, port, threads, timeout, self.parent_window.loop)
+
+            E = engine.Engine(self.ops,  self.parent_window.loop)
             tasks = []
-            tasks.append(self.parent_window.loop.create_task(E.run(template, pset, _ssl, mode, self.progress_bar)))
+            task = self.parent_window.loop.create_task(E.run(template, pset, _ssl, mode, self.progress_bar))
+            tasks.append(task)
             await asyncio.wait(tasks)
-            results = tasks[0].result()
-            self.parent_window.CreateViewer(results)
+            requests = tasks[0].result()
+            self.parent_window.CreateViewer(requests)
+            self.requests = requests
             self.running = False
             self.parent_window.ToolBar.EnableTool(wx.ID_STOP, False)
             self.parent_window.ToolBar.EnableTool(wx.ID_EXECUTE, True)
@@ -75,11 +76,20 @@ class EventsPanel(wx.Panel):
                 return
 
             pathname = fileDialog.GetPath()
-            #with open(pathname, 'w') as fp:
-             #   pickle.dump(self.reqs, fp)
+            with open(pathname, 'w') as fp:
+                pickle.dump(self.requests, fp)
 
     def OnOpen(self, e):
-        pass
+        with wx.FileDialog(self, "Open requests file", wildcard="Pickle files (*.p)|*.p",
+                           style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
+            if fileDialog.ShowModal() == wx.ID_CANCEL:
+                return
+
+            pathname = fileDialog.GetPath()
+            with open(pathname, 'r') as fp:
+                reqs = pickle.load(fp)
+                self.parent_window.CreateViewer(reqs)
+
 
     def OnOpenSetup(self, e):
         with wx.FileDialog(self, "Open setup file", wildcard="Pickle files (*.p)|*.p",
@@ -122,7 +132,7 @@ class EventsPanel(wx.Panel):
             self.ops.ps_box.Append(p)
         return None
 
-    def OnLoadSetFile(self, e):
+    def OnLoadParamFile(self, e):
         with wx.FileDialog(self, "Open parameter file", wildcard="All files (*.*)|*.*",
                            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
             if fileDialog.ShowModal() == wx.ID_CANCEL:

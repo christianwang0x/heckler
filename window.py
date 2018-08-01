@@ -85,7 +85,7 @@ class WindowFrame(MenuFrame):
 
     def InitWindow(self):
         self.SetSize((1200, 850))
-        self.SetTitle('Heckler Control')
+        self.SetTitle('Heckler')
         self.Center()
 
 

@@ -20,7 +20,11 @@ class EngineException(Exception):
         self.errors = errors
 
 class Engine:
-    def __init__(self, host, port, threads, timeout, loop):
+    def __init__(self, ops, loop):
+        host = str(ops.host.GetValue())
+        port = int(ops.port.GetValue())
+        threads = int(ops.threads.GetValue())
+        timeout = int(ops.timeout.GetValue())
         self.context = ssl.create_default_context()
         self.semaphore = asyncio.Semaphore(threads)
         self.loop = loop
