@@ -9,12 +9,12 @@ class ControlPanel(EventsPanel):
         super(ControlPanel, self).__init__(*args, **kwargs)
         self.progress_bar = None
         self.running = False
-        self.requester = None
         self.InitLayout()
 
     def InitLayout(self):
         sizer = wx.GridBagSizer(1, 1)
         self.SetSizer(sizer)
+
         data_box = wx.TextCtrl(self, style=wx.TE_MULTILINE)
         data_box.SetFont(self.fwfont)
         data_box.SetValue(DEFAULT_REQUEST_DATA)

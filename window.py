@@ -36,12 +36,11 @@ class MenuFrame(wx.Frame):
         file_menu.Append(exit_mi)
 
         control_menu = wx.Menu()
-        run_mi = wx.MenuItem(control_menu, wx.ID_ANY, '&Run')
-        abort_mi = wx.MenuItem(control_menu, wx.ID_ANY, '&Abort')
+        #run_mi = wx.MenuItem(control_menu, wx.ID_ANY, '&Run')
         stop_mi = wx.MenuItem(control_menu, wx.ID_ANY, '&Stop')
         preferences_mi = wx.MenuItem(control_menu, wx.ID_ANY, '&Preferences')
 
-        [control_menu.Append(i) for i in (run_mi, abort_mi, stop_mi)]
+        control_menu.Append(stop_mi)
         control_menu.AppendSeparator()
         control_menu.Append(preferences_mi)
 
@@ -60,7 +59,8 @@ class MenuFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.control_panel.OnSaveSetup, save_setup_mi)
         self.Bind(wx.EVT_MENU, self.control_panel.OnExit, exit_mi)
 
-        self.Bind(wx.EVT_MENU, self.control_panel.OnRun, run_mi)
+        #self.Bind(wx.EVT_MENU, self.control_panel.OnRun, run_mi)
+        #AsyncBind(run_mi, wx.EVT_MENU, self.control_panel.OnRun)
         self.Bind(wx.EVT_MENU, self.control_panel.OnStop, stop_mi)
         self.Bind(wx.EVT_MENU, self.control_panel.OnPreferences, preferences_mi)
 

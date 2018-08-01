@@ -69,7 +69,6 @@ class EventsPanel(wx.Panel):
         if not self.ops.running:
             wx.MessageBox("Engine is not running", "Error", wx.OK | wx.ICON_INFORMATION)
             return None
-        # self.requester.stop_signal = True
         self.ops.running = False
         self.parent_window.ToolBar.EnableTool(wx.ID_STOP, False)
         self.parent_window.ToolBar.EnableTool(wx.ID_EXECUTE, True)
@@ -110,7 +109,7 @@ class EventsPanel(wx.Panel):
                 return
 
             pathname = fileDialog.GetPath()
-            with open(pathname, 'w') as fp:
+            with open(pathname, 'wb') as fp:
                 pickle.dump(self.requests, fp)
 
     def OnOpen(self, e):
@@ -120,22 +119,25 @@ class EventsPanel(wx.Panel):
                 return
 
             pathname = fileDialog.GetPath()
-            with open(pathname, 'r') as fp:
+            with open(pathname, 'rb') as fp:
                 reqs = pickle.load(fp)
                 self.parent_window.CreateViewer(reqs)
 
 
     def OnOpenSetup(self, e):
+        wx.MessageBox("Not working yet")
+        """
         with wx.FileDialog(self, "Open setup file", wildcard="Pickle files (*.p)|*.p",
                            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
             if fileDialog.ShowModal() == wx.ID_CANCEL:
                 return
 
             pathname = fileDialog.GetPath()
-            with open(pathname, 'r') as fp:
+            with open(pathname, 'rb') as fp:
                 setup = pickle.load(fp)
-                for (key, value) in vars(setup):
-                    getattr(self.ops, key).SetValue(value)
+                self.ops = setup
+        """
+        return
 
     def OnSaveSetup(self, e):
         with wx.FileDialog(self, "Save current setup to file", wildcard="Pickle files (*.p)|*.p",
@@ -143,7 +145,7 @@ class EventsPanel(wx.Panel):
             if fileDialog.ShowModal() == wx.ID_CANCEL:
                 return
             pathname = fileDialog.GetPath()
-            with open(pathname, 'w') as fp:
+            with open(pathname, 'wb') as fp:
                 pickle.dump(self.ops, fp)
 
     def OnExit(self, e):
