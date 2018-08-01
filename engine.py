@@ -5,6 +5,7 @@ import async_timeout
 import re
 
 from constants import *
+from http import *
 
 class Request():
     def __init__(self, template, params):
@@ -29,8 +30,9 @@ class Engine:
         self.context = ssl.create_default_context()
         self.semaphore = asyncio.Semaphore(threads)
         self.loop = loop
-        self.host = host
-        self.port = int(port)
+        proxy = bool(ops.proxy.GetValue())
+        self.host = ops.proxy_host.GetValue() if proxy else host
+        self.port = int(ops.proxy_port.GetValue() if proxy else port)
         self.timeout = timeout
         self.requests_made = 0
         self.ops = ops
@@ -74,16 +76,9 @@ class Engine:
         req.request = req.request[:lb_index] + param + req.request[rb_index + 1:]
         req.request = self.add_req_newlines(req.request)
         if self.update_cl:
-            req.request = self.set_content_len(req.request)
-        return req
+            req.request = set_content_len(req.request)
 
-    def set_content_len(self, request_str):
-        stripped = request_str.rstrip()
-        headers, data = stripped.split('\r\n\r\n', 1)
-        new_header = 'Content-Length: %d' % len(data)
-        pattern = 'Content-Length: \d+'
-        result = re.sub(pattern, new_header, request_str)
-        return result
+        return req
 
     def gen_multiplex(self, template, param_list):
         req = Request(template, param_list)

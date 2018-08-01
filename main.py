@@ -1,6 +1,6 @@
 import wx
 from window import ToolbarFrame
-from async_main import WxAsyncApp
+from wxasync import WxAsyncApp
 from asyncio.events import get_event_loop
 
 

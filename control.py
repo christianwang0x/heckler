@@ -1,7 +1,7 @@
 from default_settings import *
 from events import EventsPanel
 import wx
-from async_main import AsyncBind
+from wxasync import AsyncBind
 
 
 class ControlPanel(EventsPanel):

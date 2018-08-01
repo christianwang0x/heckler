@@ -1,6 +1,7 @@
 import wx
 from control import ControlPanel
 from viewer_events import ViewerEventPanel
+from wxasync import AsyncBind
 
 class MenuFrame(wx.Frame):
     def __init__(self, *args, **kwargs):
@@ -111,6 +112,7 @@ class ToolbarFrame(WindowFrame):
         toolbar.Bind(wx.EVT_TOOL, self.control_panel.OnOpen, open_tb)
         toolbar.Bind(wx.EVT_TOOL, self.control_panel.OnSave, save_tb)
         toolbar.Bind(wx.EVT_TOOL, self.control_panel.OnExit, exit_tb)
-        toolbar.Bind(wx.EVT_TOOL, self.control_panel.OnRun, run_tb)
+        # toolbar.Bind(wx.EVT_TOOL, self.control_panel.OnRun, run_tb)
+        # AsyncBind(run_tb, wx.EVT_TOOL, self.control_panel.OnRun)
         toolbar.Bind(wx.EVT_TOOL, self.control_panel.OnStop, stop_tb)
         toolbar.Realize()

@@ -2,6 +2,7 @@ import wx
 import pickle
 import engine
 import asyncio
+import http
 from options import Options
 from constants import *
 from default_settings import *
@@ -36,13 +37,21 @@ class EventsPanel(wx.Panel):
             self.parent_window.ToolBar.EnableTool(wx.ID_EXECUTE, False)
 
 
-            _ssl = int(self.ops.https.GetValue())
+            _ssl = bool(self.ops.https.GetValue())
             template = self.ops.data.GetValue()
             encoder = self.ops.encoder.GetValue()
             self.ops.encode_all_payloads(encoder)
             pset = self.ops.ps_sets
             mode = self.ops.mode.GetValue()
-
+            proxy = bool(self.ops.proxy.GetValue())
+            pauth = bool(self.ops.proxy_auth.GetValue())
+            puser = self.ops.proxy_user.GetValue()
+            ppass = self.ops.proxy_pass.GetValue()
+            dest_host = self.ops.host.GetValue()
+            if proxy:
+                template = http.proxify(template, dest_host, _ssl,
+                                        auth=pauth, username=puser,
+                                        password=ppass)
             E = engine.Engine(self.ops,  self.parent_window.loop)
             tasks = []
             task = self.parent_window.loop.create_task(E.run(template, pset, _ssl, mode, self.progress_bar))
@@ -72,8 +81,8 @@ class EventsPanel(wx.Panel):
         self.ops.port.SetValue(DEFAULT_PORT)
         self.ops.https.SetValue(DEFAULT_HTTPS)
         self.ops.mode.SetValue(DEFAULT_MODE)
-        self.ops.marker_no(DEFAULT_MARKER)
-        self.ops.ps_box.SetValue("")
+        self.ops.marker_no.SetValue(DEFAULT_MARKER)
+        self.ops.ps_box.Clear()
         self.ops.encoder.SetValue(DEFAULT_ENCODER)
         self.ops.timeout.SetValue(DEFAULT_TIMEOUT)
         self.ops.update_cl.SetValue(DEFAULT_UPDATE_CL)
@@ -91,6 +100,9 @@ class EventsPanel(wx.Panel):
         return None
 
     def OnSave(self, e):
+        if not self.requests:
+            wx.MessageBox("No requests have been made yet!", "Save error", wx.ICON_EXCLAMATION)
+            return
         with wx.FileDialog(self, "Save requests to file", wildcard="Pickle files (*.p)|*.p",
                            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as fileDialog:
 

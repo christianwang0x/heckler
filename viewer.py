@@ -40,12 +40,12 @@ class ViewerPanel(wx.Panel):
         rlist.InsertColumn(7, 'Request', width=200, format=wx.LIST_FORMAT_LEFT)
         rlist.InsertColumn(8, 'Response', width=200)
         sizer.Add(rlist, pos=(3, 3), span=(8, 7), flag=wx.EXPAND)
-
+        """
         render_btn = wx.Button(self, label="Render response", size=(120, 25))
         render_btn.SetFont(self.hfont)
         sizer.Add(render_btn, pos=(3, 10))
         render_btn.Bind(wx.EVT_BUTTON, self.OnRender)
-
+        """
         sizer.AddGrowableCol(3)
         sizer.AddGrowableRow(3)
         sizer.AddGrowableRow(12)

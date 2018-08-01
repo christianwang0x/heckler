@@ -7,6 +7,8 @@ from collections import defaultdict
 
 GlobalWxAsyncApp = None
 
+# Special thanks to Christian Bodt for creating this module!
+
 
 class WxAsyncApp(wx.App):
     def __init__(self, warn_on_cancel_callback=False, loop=None):
