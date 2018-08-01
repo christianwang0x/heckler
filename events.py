@@ -36,10 +36,16 @@ class EventsPanel(wx.Panel):
             threads = int(self.ops.threads.GetValue())
             _ssl = int(self.ops.https.GetValue())
             template = self.ops.data.GetValue()
+            encoder = self.ops.encoder.GetValue()
+            self.ops.encode_all_payloads(encoder)
             pset = self.ops.ps_sets
+            mode = self.ops.mode.GetValue()
             E = engine.Engine(host, port, threads)
-            reqs = E.run(template, pset, _ssl)
+            reqs = E.run(template, pset, _ssl, mode)
             self.parent_window.CreateViewer(reqs)
+            self.running = False
+            self.parent_window.ToolBar.EnableTool(wx.ID_STOP, False)
+            self.parent_window.ToolBar.EnableTool(wx.ID_EXECUTE, True)
             return None
 
     def OnStop(self, e):

@@ -1,5 +1,7 @@
 import re
 
+from encoders import *
+from constants import *
 
 class Options:
     def __init__(self):
@@ -25,17 +27,43 @@ class Options:
         self.threads = None
         self.request_delay = None
         self.encoder = None
-        self.vs = [(self.data_isgood, "Invalid data"),
+        self.vs = [(self.data_isgood, "Invalid data / markers"),
                    (self.host_isgood, "Invalid host"),
                    (self.port_isgood, "Invalid port"),
                    (self.proxy_isgood, "Invalid proxy settings"),
                    (self.reconnects_isgood, "Invalid number of reconnects"),
                    (self.recon_delay_isgood, "Invalid reconnect delay"),
                    (self.threads_isgood, "Invalid number of threads"),
-                   (self.req_delay_isgood, "Invalid request delay")]
+                   (self.req_delay_isgood, "Invalid request delay"),
+                   (self.mode_isgood, "Invalid mode")]
+
+    def encode_all_payloads(self, encoder):
+        if encoder == "None":
+            return None
+        elif encoder == "Hexadecimal":
+            E = AsciiHex
+        elif encoder == "Base 64":
+            E = Base64
+        elif encoder == "MD5":
+            E = MD5
+        else:
+            return None
+        for key in self.ps_sets:
+            p_list = self.ps_sets[key]
+            e_list = encode_list(p_list, E)
+            self.ps_sets[key] = e_list
+
+
 
     def data_isgood(self):
-        return True
+        t = self.data.GetValue()
+        lc, rc = (t.count(LEFT_CHAR), t.count(RIGHT_CHAR))
+        if lc != rc or lc != len(self.ps_sets):
+            return False
+        elif t.index(LEFT_CHAR) > t.index(RIGHT_CHAR):
+            return False
+        else:
+            return True
 
     def valid_host(self, host):
         template = "[A-Za-z0-9-.]+"
@@ -50,6 +78,22 @@ class Options:
                 return False
             else:
                 return True
+
+    def mode_isgood(self):
+        mode = self.mode.GetValue()
+        if len(self.ps_sets) == 1:
+            if mode == "Serial" or mode == "Concurrent":
+                pass
+            else:
+                return False
+        elif len(self.ps_sets) > 1:
+            if mode == "Multiplex":
+                pass
+            else:
+                return False
+        else:
+            return False
+        return True
 
     def host_isgood(self):
         host = self.host.GetValue()

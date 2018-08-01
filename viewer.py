@@ -8,7 +8,7 @@ class ViewerPanel(wx.Panel):
         self.request_list = \
             wx.ListCtrl(self, wx.ID_ANY,
                         style=wx.LC_REPORT |
-                              wx.LC_SINGLE_SEL | wx.LIST_ALIGN_SNAP_TO_GRID)
+                              wx.LC_SINGLE_SEL)
         self.response_box = wx.TextCtrl(self, style=wx.TE_READONLY | wx.TE_MULTILINE )
 
         self.parent_window = parent_window
@@ -37,7 +37,7 @@ class ViewerPanel(wx.Panel):
         rlist.InsertColumn(4, 'Length', width=50)
         rlist.InsertColumn(5, 'Status', width=50)
         rlist.InsertColumn(6, 'Response time', width=50)
-        rlist.InsertColumn(7, 'Request', width=200)
+        rlist.InsertColumn(7, 'Request', width=200, format=wx.LIST_FORMAT_LEFT)
         rlist.InsertColumn(8, 'Response', width=200)
         sizer.Add(rlist, pos=(3, 3), span=(8, 7), flag=wx.EXPAND)
 
@@ -56,7 +56,8 @@ class ViewerPanel(wx.Panel):
         params = request.params
         length = len(request.response)
         status = request.response.split(b' ')[1].decode('utf-8')
-        response_time = request.response_time - request.request_time
+        response_time_f = request.response_time - request.request_time
+        response_time = str(int(round(response_time_f * 1000))) + " ms"
         response = request.response.decode("utf-8")
         _request = request.request
         return tuple((str(i) for i in (method, url, params, length,
@@ -64,7 +65,7 @@ class ViewerPanel(wx.Panel):
 
     def LoadRequests(self, reqs):
         for no, request in enumerate(reqs):
-            row_data = self.ParseRequest(request)
+            row_data = (str(no),) + self.ParseRequest(request)
             index = self.request_list.InsertItem(no, no)
             for column, data in enumerate(row_data):
-                self.request_list.SetItem(index, column+1, data)
+                self.request_list.SetItem(index, column, data)

@@ -67,7 +67,7 @@ class ControlPanel(EventsPanel):
         mode_lbl = wx.StaticText(self, label="Mode:")
         mode_lbl.SetFont(self.hfont)
         sizer.Add(mode_lbl, pos=(8, 4))
-        mode_names = ['Serial', 'Concurrent', 'Multiplex', 'Permuter']
+        mode_names = ['Serial', 'Concurrent', 'Multiplex']
         mode_cb = wx.ComboBox(self, choices=mode_names,
                               style=wx.CB_READONLY)
         mode_cb.SetFont(self.hfont)

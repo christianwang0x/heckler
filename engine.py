@@ -2,13 +2,15 @@ import asyncio
 import ssl
 import time
 
+from constants import *
+
 class Request():
     def __init__(self, template, params):
         self.template = template
         self.params = params
         self.request_time = None
         self.response_time = None
-        self.request = None
+        self.request = template
         self.response = None
 
 class EngineException(Exception):
@@ -33,28 +35,53 @@ class Engine:
             request += end
             return request
 
-    def gen_requests(self, template, param_set):
+    def gen_serial(self, template, param):
+        req = Request(template, [param])
+        req = self.sub_marker(req, param)
+        return req
+
+    def gen_serials(self, template, param_set):
+        if len(param_set) != 1:
+            raise EngineException("Bad parameters", "Serial")
+        param_list = param_set[list(param_set.keys())[0]]
+        for param in param_list:
+            yield self.gen_serial(template, param)
+
+    def gen_concurrent(self, template, param):
+        req = Request(template, [param])
+        while req.request.count(LEFT_CHAR):
+            req = self.sub_marker(req, param)
+        return req
+
+    def gen_concurrents(self, template, param_set):
+        param_list = param_set[list(param_set.keys())[0]]
+        for param in param_list:
+            yield self.gen_concurrent(template, param)
+
+
+    def sub_marker(self, req, param):
+        lb_index = req.request.index(LEFT_CHAR)
+        rb_index = req.request.index(RIGHT_CHAR)
+        req.request = req.request[:lb_index] + param + req.request[rb_index + 1:]
+        req.request = self.add_req_newlines(req.request)
+        return req
+
+
+    def gen_multiplex(self, template, param_list):
+        req = Request(template, param_list)
+        req.request = template
+        for p in param_list:
+            req = self.sub_marker(req, p)
+        return req
+
+    def gen_multiplexes(self, template, param_set):
         min_len = min([len(param_set[i]) for i in param_set.keys()])
         for j in range(min_len):
             param_list = []
             for key in sorted(param_set.keys(), key=int):
                 param = param_set[key][j]
                 param_list.append(param)
-            yield self.gen_request(template, param_list)
-
-    def gen_request(self, template, param_list):
-        left_char = chr(0xab)
-        right_char = chr(0xbb)
-        if not template.count(left_char) == template.count(right_char) == len(param_list):
-            raise EngineException("Bad markers or parameters", "")
-        req = Request(template, param_list)
-        req.request = template
-        for p in param_list:
-            lb_index = req.request.index(left_char)
-            rb_index = req.request.index(right_char)
-            req.request = req.request[:lb_index] + p + req.request[rb_index + 1:]
-            req.request = self.add_req_newlines(req.request)
-        return req
+            yield self.gen_multiplex(template, param_list)
 
 
 # for testing purposes only
@@ -93,9 +120,17 @@ class Engine:
             request.response = data
             return request
 
-    async def engine(self, template, param_set, _ssl):
+    async def engine(self, template, param_set, _ssl, mode):
         tasks = []
-        for request in self.gen_requests(template, param_set):
+        if mode == 'Serial':
+            generator = self.gen_serials(template, param_set)
+        elif mode == 'Concurrent':
+            generator = self.gen_concurrents(template, param_set)
+        elif mode == 'Multiplex':
+            generator = self.gen_multiplexes(template, param_set)
+        else:
+            raise EngineException("Bad mode", "Engine")
+        for request in generator:
             if _ssl:
                 t = self.loop.create_task(self.ssl_request(request))
             else:
@@ -104,7 +139,7 @@ class Engine:
         await asyncio.wait(tasks)
         return [task.result() for task in tasks]
 
-    def run(self, template, param_set, _ssl):
+    def run(self, template, param_set, _ssl, mode):
         requests = self.loop.run_until_complete(
-            self.engine(template, param_set, _ssl))
+            self.engine(template, param_set, _ssl, mode))
         return requests
