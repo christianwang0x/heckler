@@ -4,6 +4,7 @@ import engine
 import asyncio
 from options import Options
 from constants import *
+from default_settings import *
 
 
 class EventsPanel(wx.Panel):
@@ -21,7 +22,7 @@ class EventsPanel(wx.Panel):
         self.progress_bar = None
 
     async def OnRun(self, e):
-        if self.running:
+        if self.ops.running:
             wx.MessageBox("Engine is already running", 'Error', wx.OK | wx.ICON_INFORMATION)
             return None
 
@@ -30,7 +31,7 @@ class EventsPanel(wx.Panel):
             wx.MessageBox(s, 'Input Error', wx.OK | wx.ICON_EXCLAMATION)
             return None
         else:
-            self.running = True
+            self.ops.running = True
             self.parent_window.ToolBar.EnableTool(wx.ID_STOP, True)
             self.parent_window.ToolBar.EnableTool(wx.ID_EXECUTE, False)
 
@@ -50,23 +51,44 @@ class EventsPanel(wx.Panel):
             requests = tasks[0].result()
             self.parent_window.CreateViewer(requests)
             self.requests = requests
-            self.running = False
+            self.ops.running = False
             self.parent_window.ToolBar.EnableTool(wx.ID_STOP, False)
             self.parent_window.ToolBar.EnableTool(wx.ID_EXECUTE, True)
             return None
 
     def OnStop(self, e):
-        if not self.running:
+        if not self.ops.running:
             wx.MessageBox("Engine is not running", "Error", wx.OK | wx.ICON_INFORMATION)
             return None
         # self.requester.stop_signal = True
-        self.running = False
+        self.ops.running = False
         self.parent_window.ToolBar.EnableTool(wx.ID_STOP, False)
         self.parent_window.ToolBar.EnableTool(wx.ID_EXECUTE, True)
         return None
 
     def OnNew(self, e):
-        pass
+        self.ops.data.SetValue(DEFAULT_REQUEST_DATA)
+        self.ops.host.SetValue(DEFAULT_HOST)
+        self.ops.port.SetValue(DEFAULT_PORT)
+        self.ops.https.SetValue(DEFAULT_HTTPS)
+        self.ops.mode.SetValue(DEFAULT_MODE)
+        self.ops.marker_no(DEFAULT_MARKER)
+        self.ops.ps_box.SetValue("")
+        self.ops.encoder.SetValue(DEFAULT_ENCODER)
+        self.ops.timeout.SetValue(DEFAULT_TIMEOUT)
+        self.ops.update_cl.SetValue(DEFAULT_UPDATE_CL)
+        self.ops.proxy.SetValue(DEFAULT_USE_PROXY)
+        self.ops.proxy_host.SetValue(DEFAULT_PROXY_HOST)
+        self.ops.proxy_port.SetValue(DEFAULT_PROXY_PORT)
+        self.ops.proxy_auth.SetValue(DEFAULT_AUTHENTICATE_PROXY)
+        self.ops.proxy_user.SetValue(DEFAULT_PROXY_USER)
+        self.ops.proxy_pass.SetValue(DEFAULT_PROXY_PASS)
+        self.ops.reconnects.SetValue(DEFAULT_RA)
+        self.ops.recon_delay.SetValue(DEFAULT_RCD)
+        self.ops.threads.SetValue(DEFAULT_THREADS)
+        self.ops.request_delay.SetValue(DEFAULT_RQD)
+        self.progress_bar.SetValue(0)
+        return None
 
     def OnSave(self, e):
         with wx.FileDialog(self, "Save requests to file", wildcard="Pickle files (*.p)|*.p",
@@ -116,7 +138,7 @@ class EventsPanel(wx.Panel):
         self.Close()
 
     def OnPreferences(self, e):
-        pass
+        wx.MessageBox("No preferences yet", "Preferences", wx.OK)
 
     def OnHelp(self, e):
         wx.MessageBox(HELP_MSG, 'Help', wx.OK | wx.ICON_QUESTION)

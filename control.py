@@ -71,7 +71,7 @@ class ControlPanel(EventsPanel):
         mode_cb = wx.ComboBox(self, choices=mode_names,
                               style=wx.CB_READONLY)
         mode_cb.SetFont(self.hfont)
-        mode_cb.SetValue(mode_names[0])
+        mode_cb.SetValue(DEFAULT_MODE)
         self.ops.mode = mode_cb
         sizer.Add(mode_cb, pos=(8, 5), span=(1, 2))
 
@@ -81,7 +81,7 @@ class ControlPanel(EventsPanel):
         mark_numbers = [str(i) for i in range(1, 17)]
         mark_cb = wx.ComboBox(self, choices=mark_numbers,
                               style=wx.CB_READONLY)
-        mark_cb.SetValue(mark_numbers[0])
+        mark_cb.SetValue(DEFAULT_MARKER)
         mark_cb.SetFont(self.hfont)
         self.ops.marker_no = mark_cb
         sizer.Add(mark_cb, pos=(9, 5))
@@ -126,7 +126,7 @@ class ControlPanel(EventsPanel):
         encdrs = ["None", "Hexadecimal", "Base 64", "MD5"]
         encdr_cb = wx.ComboBox(self, choices=encdrs, style=wx.CB_READONLY)
         encdr_cb.SetFont(self.hfont)
-        encdr_cb.SetValue(encdrs[0])
+        encdr_cb.SetValue(DEFAULT_ENCODER)
         self.ops.encoder =encdr_cb
         sizer.Add(encdr_cb, pos=(16, 5), span=(1, 2), flag=wx.EXPAND)
 

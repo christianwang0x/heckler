@@ -2,6 +2,7 @@ import asyncio
 import ssl
 import time
 import async_timeout
+import re
 
 from constants import *
 
@@ -32,6 +33,8 @@ class Engine:
         self.port = int(port)
         self.timeout = timeout
         self.requests_made = 0
+        self.ops = ops
+        self.update_cl = bool(ops.update_cl.GetValue())
 
     def add_req_newlines(self, request):
         end = '\r\n\r\n'
@@ -65,14 +68,22 @@ class Engine:
         for param in param_list:
             yield self.gen_concurrent(template, param)
 
-
     def sub_marker(self, req, param):
         lb_index = req.request.index(LEFT_CHAR)
         rb_index = req.request.index(RIGHT_CHAR)
         req.request = req.request[:lb_index] + param + req.request[rb_index + 1:]
         req.request = self.add_req_newlines(req.request)
+        if self.update_cl:
+            req.request = self.set_content_len(req.request)
         return req
 
+    def set_content_len(self, request_str):
+        stripped = request_str.rstrip()
+        headers, data = stripped.split('\r\n\r\n', 1)
+        new_header = 'Content-Length: %d' % len(data)
+        pattern = 'Content-Length: \d+'
+        result = re.sub(pattern, new_header, request_str)
+        return result
 
     def gen_multiplex(self, template, param_list):
         req = Request(template, param_list)
@@ -170,6 +181,8 @@ class Engine:
         _requests = [r for r in generator]
         self.progress_bar.SetRange(len(_requests))
         for request in _requests:
+            if not self.ops.running:
+                break
             if _ssl:
                 t = self.loop.create_task(self.ssl_request(request))
             else:

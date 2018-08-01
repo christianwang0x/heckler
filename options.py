@@ -5,6 +5,7 @@ from constants import *
 
 class Options:
     def __init__(self):
+        self.running = None
         self.data = None
         self.host = None
         self.port = None
