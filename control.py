@@ -133,17 +133,21 @@ class ControlPanel(EventsPanel):
         sep2 = wx.StaticLine(self, size=(300, 1))
         sizer.Add(sep2, pos=(18, 4), span=(1, 4), flag=wx.ALIGN_CENTER)
 
+        timeout_lbl = wx.StaticText(self, label="Timeout:")
+        timeout_lbl.SetFont(self.hfont)
+        sizer.Add(timeout_lbl, pos=(20, 4), span=(1, 1))
+
+        timeout_txt = wx.TextCtrl(self)
+        timeout_txt.SetFont(self.hfont)
+        timeout_txt.SetValue(DEFAULT_TIMEOUT)
+        self.ops.timeout = timeout_txt
+        sizer.Add(timeout_txt, pos=(20, 5), span=(1, 1), flag=wx.EXPAND)
+
         update_cl = wx.CheckBox(self, label="Update Content Length Header")
         update_cl.SetFont(self.hfont)
         update_cl.SetValue(DEFAULT_UPDATE_CL)
         self.ops.update_cl = update_cl
-        sizer.Add(update_cl, pos=(20, 4), span=(1, 3))
-
-        ka_cb = wx.CheckBox(self, label="Keep-Alive")
-        ka_cb.SetValue(DEFAULT_KEEP_ALIVE)
-        ka_cb.SetFont(self.hfont)
-        self.ops.keep_alive = ka_cb
-        sizer.Add(ka_cb, pos=(21, 4), span=(1, 3))
+        sizer.Add(update_cl, pos=(21, 4), span=(1, 3))
 
         proxy = wx.CheckBox(self, label="Use Proxy")
         proxy.SetFont(self.hfont)

@@ -1,6 +1,7 @@
 import asyncio
 import ssl
 import time
+import async_timeout
 
 from constants import *
 
@@ -19,12 +20,14 @@ class EngineException(Exception):
         self.errors = errors
 
 class Engine:
-    def __init__(self, host, port, threads):
+    def __init__(self, host, port, threads, timeout):
         self.context = ssl.create_default_context()
         self.semaphore = asyncio.Semaphore(threads)
         self.loop = asyncio.get_event_loop()
         self.host = host
         self.port = int(port)
+        self.timeout = timeout
+        self.requests_made = 0
 
     def add_req_newlines(self, request):
         end = '\r\n\r\n'
@@ -90,34 +93,64 @@ class Engine:
             await asyncio.sleep(1)
             return request
 
+    async def http_read(self, reader):
+        data = b''
+        while True:
+            buf = await reader.read(BUFF)
+            data += buf
+            if b'\r\n\r\n' in data:
+                nl = b'\r\n'
+                break
+            elif b'\n\n' in data:
+                nl = b'\n'
+                break
+            else:
+                continue
+        headers = data.partition(nl*2)[0]
+        cl = [line for line in headers.split(nl) if b'Content-Length' in line]
+        if len(cl) != 1:
+            print(data, cl, headers, nl, sep='\n')
+            raise EngineException("Content-Length header not found", "http_read")
+        content_len = int(cl[0].split(b' ')[1].rstrip())
+        so_far = len(data.partition(nl)[2])
+        while so_far < content_len:
+            buf = await reader.read(BUFF)
+            data += buf
+            so_far += BUFF
+        return data
 
-# make sure you increase the buffer
     async def tcp_request(self, request):
         async with self.semaphore:
-            reader, writer = await asyncio.open_connection(
-                self.host, int(self.port), loop=self.loop)
-            request_data = request.request
-            writer.write(request_data.encode())
-            await writer.drain()
-            request.request_time = time.time()
-            data = await reader.read(1024)
-            writer.close()
-            request.response_time = time.time()
-            request.response = data
+            async with async_timeout.timeout(self.timeout):
+                reader, writer = await asyncio.open_connection(
+                    self.host, int(self.port), loop=self.loop)
+                request_data = request.request
+                writer.write(request_data.encode())
+                await writer.drain()
+                request.request_time = time.time()
+                data = await self.http_read(reader)
+                writer.close()
+                request.response_time = time.time()
+                request.response = data
+            self.requests_made += 1
+            self.progress_bar.SetValue(self.requests_made)
             return request
 
     async def ssl_request(self, request):
         async with self.semaphore:
-            reader, writer = await asyncio.open_connection(
-                self.host, int(self.port), loop=self.loop, ssl=self.context)
-            request_data = request.request
-            writer.write(request_data.encode())
-            await writer.drain()
-            request.request_time = time.time()
-            data = await reader.read(1024)
-            writer.close()
-            request.response_time = time.time()
-            request.response = data
+            async with async_timeout.timeout(self.timeout):
+                reader, writer = await asyncio.open_connection(
+                    self.host, int(self.port), loop=self.loop, ssl=self.context)
+                request_data = request.request
+                writer.write(request_data.encode())
+                await writer.drain()
+                request.request_time = time.time()
+                data = await self.http_read(reader)
+                writer.close()
+                request.response_time = time.time()
+                request.response = data
+            self.requests_made += 1
+            self.progress_bar.SetValue(self.requests_made)
             return request
 
     async def engine(self, template, param_set, _ssl, mode):
@@ -130,7 +163,9 @@ class Engine:
             generator = self.gen_multiplexes(template, param_set)
         else:
             raise EngineException("Bad mode", "Engine")
-        for request in generator:
+        _requests = [r for r in generator]
+        self.progress_bar.SetRange(len(_requests))
+        for request in _requests:
             if _ssl:
                 t = self.loop.create_task(self.ssl_request(request))
             else:
@@ -139,7 +174,8 @@ class Engine:
         await asyncio.wait(tasks)
         return [task.result() for task in tasks]
 
-    def run(self, template, param_set, _ssl, mode):
+    def run(self, template, param_set, _ssl, mode, progress_bar):
+        self.progress_bar = progress_bar
         requests = self.loop.run_until_complete(
             self.engine(template, param_set, _ssl, mode))
         return requests

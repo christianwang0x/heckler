@@ -17,6 +17,7 @@ class EventsPanel(wx.Panel):
                               wx.FONTWEIGHT_NORMAL)
         self.parent_window = parent_window
         self.engine = None
+        self.progress_bar = None
 
     def OnRun(self, e):
         if self.running:
@@ -40,8 +41,9 @@ class EventsPanel(wx.Panel):
             self.ops.encode_all_payloads(encoder)
             pset = self.ops.ps_sets
             mode = self.ops.mode.GetValue()
-            E = engine.Engine(host, port, threads)
-            reqs = E.run(template, pset, _ssl, mode)
+            timeout = int(self.ops.timeout.GetValue())
+            E = engine.Engine(host, port, threads, timeout)
+            reqs = E.run(template, pset, _ssl, mode, self.progress_bar)
             self.parent_window.CreateViewer(reqs)
             self.running = False
             self.parent_window.ToolBar.EnableTool(wx.ID_STOP, False)

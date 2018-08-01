@@ -14,8 +14,8 @@ class Options:
         self.ps_box = None
         self.ps_sets = dict()
         self.add_p = None
+        self.timeout = None
         self.update_cl = None
-        self.keep_alive = None
         self.proxy = None
         self.proxy_host = None
         self.proxy_port = None
@@ -35,7 +35,8 @@ class Options:
                    (self.recon_delay_isgood, "Invalid reconnect delay"),
                    (self.threads_isgood, "Invalid number of threads"),
                    (self.req_delay_isgood, "Invalid request delay"),
-                   (self.mode_isgood, "Invalid mode")]
+                   (self.mode_isgood, "Invalid mode"),
+                   (self.timeout_isgood, "Invalid timeout")]
 
     def encode_all_payloads(self, encoder):
         if encoder == "None":
@@ -53,7 +54,12 @@ class Options:
             e_list = encode_list(p_list, E)
             self.ps_sets[key] = e_list
 
-
+    def timeout_isgood(self):
+        t = self.timeout.GetValue()
+        if t.isdigit() and int(t) > 0:
+            return True
+        else:
+            return False
 
     def data_isgood(self):
         t = self.data.GetValue()
