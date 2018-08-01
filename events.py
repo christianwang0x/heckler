@@ -55,20 +55,19 @@ class EventsPanel(wx.Panel):
     def OnNew(self, e):
         pass
 
-    def OnOpen(self, e):
-        pass
-
     def OnSave(self, e):
         with wx.FileDialog(self, "Save requests to file", wildcard="Pickle files (*.p)|*.p",
                            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as fileDialog:
 
             if fileDialog.ShowModal() == wx.ID_CANCEL:
-                return  # the user changed their mind
+                return
 
-            # save the current contents in the file
             pathname = fileDialog.GetPath()
-            with open(pathname, 'w') as fp:
-                pickle.dump(self.requests, fp)
+            #with open(pathname, 'w') as fp:
+             #   pickle.dump(self.reqs, fp)
+
+    def OnOpen(self, e):
+        pass
 
     def OnOpenSetup(self, e):
         with wx.FileDialog(self, "Open setup file", wildcard="Pickle files (*.p)|*.p",

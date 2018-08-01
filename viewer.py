@@ -5,16 +5,29 @@ import wx
 class ViewerPanel(wx.Panel):
     def __init__(self, parent_window, reqs, *args, **kwargs):
         super(ViewerPanel, self).__init__(*args, **kwargs)
-        self.request_list = wx.ListCtrl(self, wx.ID_ANY,
-                                        style=wx.LC_REPORT | wx.LC_SINGLE_SEL)
+        self.request_list = \
+            wx.ListCtrl(self, wx.ID_ANY,
+                        style=wx.LC_REPORT |
+                              wx.LC_SINGLE_SEL | wx.LIST_ALIGN_SNAP_TO_GRID)
+        self.response_box = wx.TextCtrl(self, style=wx.TE_READONLY | wx.TE_MULTILINE )
         self.InitViewer()
         self.LoadRequests(reqs)
         self.parent_window = parent_window
+        self.fwfont = wx.Font(9, wx.FONTFAMILY_TELETYPE,
+                              wx.FONTSTYLE_NORMAL,
+                              wx.FONTWEIGHT_NORMAL)
+        self.hfont = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT)
+        self.hfont.SetPointSize(9)
+        self.OnRender = None
+        self.reqs = reqs
 
 
     def InitViewer(self):
         sizer = wx.GridBagSizer(1, 1)
         self.SetSizer(sizer)
+        sizer.Add(self.response_box, pos=(12, 3), span=(8, 7), flag=wx.EXPAND)
+        self.response_box.SetFont(self.fwfont)
+        self.request_list.SetFont(self.fwfont)
         rlist = self.request_list
         rlist.InsertColumn(0, 'No.', width=50)
         rlist.InsertColumn(1, 'Method', width=50)
@@ -26,6 +39,15 @@ class ViewerPanel(wx.Panel):
         rlist.InsertColumn(7, 'Request', width=200)
         rlist.InsertColumn(8, 'Response', width=200)
         sizer.Add(rlist, pos=(3, 3), span=(8, 7), flag=wx.EXPAND)
+
+        render_btn = wx.Button(self, label="Render response", size=(120, 25))
+        render_btn.SetFont(self.hfont)
+        sizer.Add(render_btn, pos=(3, 10))
+        render_btn.Bind(wx.EVT_BUTTON, self.OnRender)
+
+        sizer.AddGrowableCol(3)
+        sizer.AddGrowableRow(3)
+        sizer.AddGrowableRow(12)
 
     def ParseRequest(self, request):
         request_tl = request.request.split('\n')[0].rstrip()

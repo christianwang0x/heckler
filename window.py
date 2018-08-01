@@ -1,6 +1,6 @@
 import wx
 from control import ControlPanel
-from viewer import ViewerPanel
+from viewer_events import ViewerEventPanel
 
 class MenuFrame(wx.Frame):
     def __init__(self, *args, **kwargs):
@@ -73,8 +73,8 @@ class MenuFrame(wx.Frame):
         self.SetMenuBar(menubar)
 
     def CreateViewer(self, reqs):
-        self.viewer_panel = ViewerPanel(self,reqs, self.notebook)
-        self.notebook.AddPage(self.viewer_panel, "Viewer")
+        self.viewer_event_panel = ViewerEventPanel(self,reqs, self.notebook)
+        self.notebook.AddPage(self.viewer_event_panel, "Viewer")
         return None
 
 
