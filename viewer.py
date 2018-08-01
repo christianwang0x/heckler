@@ -10,17 +10,18 @@ class ViewerPanel(wx.Panel):
                         style=wx.LC_REPORT |
                               wx.LC_SINGLE_SEL | wx.LIST_ALIGN_SNAP_TO_GRID)
         self.response_box = wx.TextCtrl(self, style=wx.TE_READONLY | wx.TE_MULTILINE )
-        self.InitViewer()
-        self.LoadRequests(reqs)
+
         self.parent_window = parent_window
         self.fwfont = wx.Font(9, wx.FONTFAMILY_TELETYPE,
                               wx.FONTSTYLE_NORMAL,
                               wx.FONTWEIGHT_NORMAL)
+
         self.hfont = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT)
         self.hfont.SetPointSize(9)
         self.OnRender = None
         self.reqs = reqs
-
+        self.InitViewer()
+        self.LoadRequests(reqs)
 
     def InitViewer(self):
         sizer = wx.GridBagSizer(1, 1)
