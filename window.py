@@ -90,10 +90,11 @@ class WindowFrame(MenuFrame):
 
 
 class ToolbarFrame(WindowFrame):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, loop, *args, **kwargs):
         super(ToolbarFrame, self).__init__(*args, **kwargs)
         self.toolbar = None
         self.InitToolbar()
+        self.loop = loop
 
     def InitToolbar(self):
         toolbar = wx.ToolBar(self, wx.ID_ANY, pos=(0, 0))

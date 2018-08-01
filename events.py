@@ -1,6 +1,7 @@
 import wx
 import pickle
 import engine
+import asyncio
 from options import Options
 from constants import *
 
@@ -19,7 +20,7 @@ class EventsPanel(wx.Panel):
         self.engine = None
         self.progress_bar = None
 
-    def OnRun(self, e):
+    async def OnRun(self, e):
         if self.running:
             wx.MessageBox("Engine is already running", 'Error', wx.OK | wx.ICON_INFORMATION)
             return None
@@ -42,9 +43,12 @@ class EventsPanel(wx.Panel):
             pset = self.ops.ps_sets
             mode = self.ops.mode.GetValue()
             timeout = int(self.ops.timeout.GetValue())
-            E = engine.Engine(host, port, threads, timeout)
-            reqs = E.run(template, pset, _ssl, mode, self.progress_bar)
-            self.parent_window.CreateViewer(reqs)
+            E = engine.Engine(host, port, threads, timeout, self.parent_window.loop)
+            tasks = []
+            tasks.append(self.parent_window.loop.create_task(E.run(template, pset, _ssl, mode, self.progress_bar)))
+            await asyncio.wait(tasks)
+            results = tasks[0].result()
+            self.parent_window.CreateViewer(results)
             self.running = False
             self.parent_window.ToolBar.EnableTool(wx.ID_STOP, False)
             self.parent_window.ToolBar.EnableTool(wx.ID_EXECUTE, True)

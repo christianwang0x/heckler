@@ -1,6 +1,7 @@
 from default_settings import *
 from events import EventsPanel
 import wx
+from async_main import AsyncBind
 
 
 class ControlPanel(EventsPanel):
@@ -26,8 +27,7 @@ class ControlPanel(EventsPanel):
         run_btn = wx.Button(self, label="Run", size=(120,25))
         run_btn.SetFont(self.hfont)
         sizer.Add(run_btn, pos=(0, 4))
-        run_btn.Bind(wx.EVT_BUTTON, self.OnRun)
-
+        AsyncBind(run_btn, wx.EVT_BUTTON, self.OnRun)
         stop_btn = wx.Button(self, label="Stop", size=(120,25))
         stop_btn.SetFont(self.hfont)
         sizer.Add(stop_btn, pos=(0,5))

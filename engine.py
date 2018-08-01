@@ -20,10 +20,10 @@ class EngineException(Exception):
         self.errors = errors
 
 class Engine:
-    def __init__(self, host, port, threads, timeout):
+    def __init__(self, host, port, threads, timeout, loop):
         self.context = ssl.create_default_context()
         self.semaphore = asyncio.Semaphore(threads)
-        self.loop = asyncio.get_event_loop()
+        self.loop = loop
         self.host = host
         self.port = int(port)
         self.timeout = timeout
@@ -172,10 +172,12 @@ class Engine:
                 t = self.loop.create_task(self.tcp_request(request))
             tasks.append(t)
         await asyncio.wait(tasks)
-        return [task.result() for task in tasks]
+        return [t.result() for t in tasks]
 
-    def run(self, template, param_set, _ssl, mode, progress_bar):
+    async def run(self, template, param_set, _ssl, mode, progress_bar):
         self.progress_bar = progress_bar
-        requests = self.loop.run_until_complete(
-            self.engine(template, param_set, _ssl, mode))
-        return requests
+#        requests = self.loop.run_until_complete(
+#            self.engine(template, param_set, _ssl, mode))
+        t = [self.loop.create_task(self.engine(template, param_set, _ssl, mode))]
+        await asyncio.wait(t)
+        return t[0].result()

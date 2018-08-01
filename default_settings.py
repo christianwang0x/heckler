@@ -1,6 +1,6 @@
-DEFAULT_REQUEST_DATA = "GET /index.html HTTP/1.1\r\nHost: www.example.com\r\n"
+DEFAULT_REQUEST_DATA = "GET /«».html HTTP/1.1\r\nHost: www.example.com\r\n"
 
-DEFAULT_HOST = ""
+DEFAULT_HOST = "www.example.com"
 
 DEFAULT_PORT = "80"
 
