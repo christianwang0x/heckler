@@ -56,10 +56,10 @@ class ViewerPanel(wx.Panel):
         method, url, version = request_tl.split(' ')
         params = request.params
         length = len(request.response)
-        status = request.response.split(b' ')[1].decode('utf-8')
+        status = request.response.split(b' ')[1].decode('utf-8', errors='ignore')
         response_time_f = request.response_time - request.request_time
         response_time = str(int(round(response_time_f * 1000))) + " ms"
-        response = request.response.decode("utf-8")
+        response = request.response.decode("utf-8", errors='ignore')
         _request = request.request
         return tuple((str(i) for i in (method, url, params, length,
                 status, response_time, _request, response)))

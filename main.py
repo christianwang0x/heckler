@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from window import ToolbarFrame
 from wxasync import WxAsyncApp
 from asyncio.events import get_event_loop

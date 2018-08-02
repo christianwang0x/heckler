@@ -47,10 +47,14 @@ class ControlPanel(EventsPanel):
         sizer.Add(stop_btn, pos=(0,5))
         stop_btn.Bind(wx.EVT_BUTTON, self.OnStop)
 
+        # Empty cells added for formatting
+        sizer.Add((120, 25), pos=(0, 6))
+        sizer.Add((10, 0), pos=(0, 7))
+
         # Host text box and label
-        host_lbl = wx.StaticText(self, label="Host:")
+        host_lbl = wx.StaticText(self, label="Host: ")
         host_lbl.SetFont(self.hfont)
-        sizer.Add(host_lbl, pos=(3,4))
+        sizer.Add(host_lbl, pos=(3,4), flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
         host_txt = wx.TextCtrl(self)
         host_txt.SetFont(self.hfont)
         host_txt.SetValue(DEFAULT_HOST)
@@ -58,9 +62,9 @@ class ControlPanel(EventsPanel):
         sizer.Add(host_txt, pos=(3, 5), span=(1, 2), flag=wx.EXPAND)
 
         # Port text box and label
-        port_lbl = wx.StaticText(self, label="Port:")
+        port_lbl = wx.StaticText(self, label="Port: ")
         port_lbl.SetFont(self.hfont)
-        sizer.Add(port_lbl, pos=(4, 4))
+        sizer.Add(port_lbl, pos=(4, 4), flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
         port_txt = wx.TextCtrl(self)
         port_txt.SetFont(self.hfont)
         port_txt.SetValue(DEFAULT_PORT)
@@ -81,7 +85,7 @@ class ControlPanel(EventsPanel):
         # Mode drop down box and label
         mode_lbl = wx.StaticText(self, label="Mode:")
         mode_lbl.SetFont(self.hfont)
-        sizer.Add(mode_lbl, pos=(8, 4))
+        sizer.Add(mode_lbl, pos=(8, 4), flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
         mode_names = ['Serial', 'Concurrent', 'Multiplex']
         mode_cb = \
             wx.ComboBox(self, choices=mode_names, style=wx.CB_READONLY)
@@ -93,7 +97,7 @@ class ControlPanel(EventsPanel):
         # Marker number drop down box and label
         mark_lbl = wx.StaticText(self, label="Marker #:")
         mark_lbl.SetFont(self.hfont)
-        sizer.Add(mark_lbl, pos=(9, 4))
+        sizer.Add(mark_lbl, pos=(9, 4), flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
         mark_numbers = [str(i) for i in range(1, 17)]
         mark_cb = \
             wx.ComboBox(self, choices=mark_numbers, style=wx.CB_READONLY)
@@ -122,20 +126,20 @@ class ControlPanel(EventsPanel):
         ps_clr_btn = wx.Button(self, label="Clear", size=(90, 25))
         ps_clr_btn.Bind(wx.EVT_BUTTON, self.OnClearPS)
         ps_clr_btn.SetFont(self.hfont)
-        sizer.Add(ps_clr_btn, pos=(13, 4))
+        sizer.Add(ps_clr_btn, pos=(13, 4), flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
 
         # Deletes the currently selected parameter. If no
         # parameter is selected, delete the last one.
         ps_del_btn = wx.Button(self, label="Delete", size=(90, 25))
         ps_del_btn.Bind(wx.EVT_BUTTON, self.OnDelP)
         ps_del_btn.SetFont(self.hfont)
-        sizer.Add(ps_del_btn, pos=(14, 4))
+        sizer.Add(ps_del_btn, pos=(14, 4), flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
 
         # Button, textbox, and label to add parameter to
         # parameter list.
         add_pl_btn = wx.Button(self, label="Add", size=(90, 25))
         add_pl_btn.SetFont(self.hfont)
-        sizer.Add(add_pl_btn, pos=(15, 4))
+        sizer.Add(add_pl_btn, pos=(15, 4), flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
         add_pl_txt = wx.TextCtrl(self)
         add_pl_txt.SetFont(self.hfont)
         self.ops.add_p = add_pl_txt
@@ -144,9 +148,9 @@ class ControlPanel(EventsPanel):
 
         # Encoder label and drop down box. Will encode
         # all parameters with selected encoder.
-        encdr_lbl = wx.StaticText(self, label="Encoder:")
+        encdr_lbl = wx.StaticText(self, label="Encoder: ")
         encdr_lbl.SetFont(self.hfont)
-        sizer.Add(encdr_lbl, pos=(16, 4), span=(1, 1))
+        sizer.Add(encdr_lbl, pos=(16, 4), flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
         encdrs = ["None", "Hexadecimal", "Base 64", "MD5"]
         encdr_cb = wx.ComboBox(self, choices=encdrs, style=wx.CB_READONLY)
         encdr_cb.SetFont(self.hfont)
@@ -159,9 +163,9 @@ class ControlPanel(EventsPanel):
         sizer.Add(sep2, pos=(18, 4), span=(1, 4), flag=wx.ALIGN_CENTER)
 
         # Timeout label and textbox
-        timeout_lbl = wx.StaticText(self, label="Timeout:")
+        timeout_lbl = wx.StaticText(self, label="Timeout: ")
         timeout_lbl.SetFont(self.hfont)
-        sizer.Add(timeout_lbl, pos=(20, 4), span=(1, 1))
+        sizer.Add(timeout_lbl, pos=(20, 4), flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
         timeout_txt = wx.TextCtrl(self)
         timeout_txt.SetFont(self.hfont)
         timeout_txt.SetValue(DEFAULT_TIMEOUT)
@@ -176,20 +180,20 @@ class ControlPanel(EventsPanel):
         update_cl.SetFont(self.hfont)
         update_cl.SetValue(DEFAULT_UPDATE_CL)
         self.ops.update_cl = update_cl
-        sizer.Add(update_cl, pos=(21, 4), span=(1, 3))
+        sizer.Add(update_cl, pos=(21, 5), span=(1, 2))
 
         # Checkbox to enable or disable the use of an HTTP proxy
         proxy = wx.CheckBox(self, label="Use Proxy")
         proxy.SetFont(self.hfont)
         proxy.SetValue(DEFAULT_USE_PROXY)
         self.ops.proxy = proxy
-        sizer.Add(proxy, pos=(22, 4), span=(1, 3))
+        sizer.Add(proxy, pos=(22, 5), span=(1, 2))
 
         # Textbox and label to define the domain name
         # or IP address of the proxy server to connect to
-        phost_lbl = wx.StaticText(self, label="Proxy Host:")
+        phost_lbl = wx.StaticText(self, label="Proxy Host: ")
         phost_lbl.SetFont(self.hfont)
-        sizer.Add(phost_lbl, pos=(23,4), span=(1, 1))
+        sizer.Add(phost_lbl, pos=(23,4), flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
         phost_txt = wx.TextCtrl(self)
         phost_txt.SetFont(self.hfont)
         phost_txt.SetValue(DEFAULT_PROXY_HOST)
@@ -198,9 +202,9 @@ class ControlPanel(EventsPanel):
 
         # Textbox and label to define the TCP port
         # of the proxy server.
-        pport_lbl = wx.StaticText(self, label="Proxy Port:")
+        pport_lbl = wx.StaticText(self, label="Proxy Port: ")
         pport_lbl.SetFont(self.hfont)
-        sizer.Add(pport_lbl, pos=(24,4), span=(1, 1))
+        sizer.Add(pport_lbl, pos=(24,4), flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
         pport_txt = wx.TextCtrl(self)
         pport_txt.SetFont(self.hfont)
         pport_txt.SetValue(DEFAULT_PROXY_PORT)
@@ -214,12 +218,12 @@ class ControlPanel(EventsPanel):
         proxy_auth.SetFont(self.hfont)
         proxy_auth.SetValue(DEFAULT_AUTHENTICATE_PROXY)
         self.ops.proxy_auth = proxy_auth
-        sizer.Add(proxy_auth, pos=(25, 4), span=(1, 3))
+        sizer.Add(proxy_auth, pos=(25, 5), span=(1, 2))
 
         # Proxy username used for proxy authentication
-        puser_lbl = wx.StaticText(self, label="Proxy User:")
+        puser_lbl = wx.StaticText(self, label="Proxy User: ")
         puser_lbl.SetFont(self.hfont)
-        sizer.Add(puser_lbl, pos=(26,4), span=(1, 1))
+        sizer.Add(puser_lbl, pos=(26,4), flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
         puser_txt = wx.TextCtrl(self)
         puser_txt.SetValue(DEFAULT_PROXY_USER)
         puser_txt.SetFont(self.hfont)
@@ -227,9 +231,9 @@ class ControlPanel(EventsPanel):
         sizer.Add(puser_txt, pos=(26, 5), span=(1, 2), flag=wx.EXPAND)
 
         # Proxy password used for proxy authentication
-        ppass_lbl = wx.StaticText(self, label="Proxy Pass:")
+        ppass_lbl = wx.StaticText(self, label="Proxy Pass: ")
         ppass_lbl.SetFont(self.hfont)
-        sizer.Add(ppass_lbl, pos=(27,4), span=(1, 1))
+        sizer.Add(ppass_lbl, pos=(27,4), flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
         ppass_txt = wx.TextCtrl(self)
         ppass_txt.SetFont(self.hfont)
         ppass_txt.SetValue(DEFAULT_PROXY_PASS)
@@ -238,9 +242,9 @@ class ControlPanel(EventsPanel):
 
         # Number of attempts to make at reconnecting to the
         # remote host upon network failure.
-        ra_lbl = wx.StaticText(self, label="Reconnect Attempts:")
+        ra_lbl = wx.StaticText(self, label="Reconnect Attempts: ")
         ra_lbl.SetFont(self.hfont)
-        sizer.Add(ra_lbl, pos=(28,4), span=(1, 2))
+        sizer.Add(ra_lbl, pos=(28,4), span=(1, 2), flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
         ra_txt = wx.TextCtrl(self)
         ra_txt.SetFont(self.hfont)
         ra_txt.SetValue(DEFAULT_RA)
@@ -249,9 +253,9 @@ class ControlPanel(EventsPanel):
 
         # Number of milliseconds to wait between reconnect attempts
         # upon a network failure.
-        rcd_lbl = wx.StaticText(self, label="Reconnect Delay (ms):")
+        rcd_lbl = wx.StaticText(self, label="Reconnect Delay (ms): ")
         rcd_lbl.SetFont(self.hfont)
-        sizer.Add(rcd_lbl, pos=(29,4), span=(1, 2))
+        sizer.Add(rcd_lbl, pos=(29,4), span=(1, 2), flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
         rcd_txt = wx.TextCtrl(self)
         rcd_txt.SetFont(self.hfont)
         rcd_txt.SetValue(DEFAULT_RCD)
@@ -262,9 +266,9 @@ class ControlPanel(EventsPanel):
         # Be careful as high values for this can trigger
         # IDS or possibly a DoS. Maximum recommended value
         # over the Internet is 10.
-        threads_lbl = wx.StaticText(self, label="Network Threads:")
+        threads_lbl = wx.StaticText(self, label="Network Threads: ")
         threads_lbl.SetFont(self.hfont)
-        sizer.Add(threads_lbl, pos=(30,4), span=(1, 2))
+        sizer.Add(threads_lbl, pos=(30,4), span=(1, 2), flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
         threads_txt = wx.TextCtrl(self)
         threads_txt.SetFont(self.hfont)
         threads_txt.SetValue(DEFAULT_THREADS)
@@ -278,7 +282,7 @@ class ControlPanel(EventsPanel):
         # after a connection slot has opened up.
         rqd_lbl = wx.StaticText(self, label="Requests Delay (ms):")
         rqd_lbl.SetFont(self.hfont)
-        sizer.Add(rqd_lbl, pos=(31,4), span=(1, 2))
+        sizer.Add(rqd_lbl, pos=(31,4), span=(1, 2), flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
         rqd_txt = wx.TextCtrl(self)
         rqd_txt.SetFont(self.hfont)
         rqd_txt.SetValue(DEFAULT_RQD)
