@@ -3,8 +3,13 @@ import re
 from encoders import *
 from constants import *
 
+
+# An object to represent the user-defined and current
+# state values of the app. Most of the methods for this
+# object are used for validation.
 class Options:
     def __init__(self):
+        self.progress_bar = None
         self.running = None
         self.data = None
         self.host = None
@@ -39,6 +44,9 @@ class Options:
                    (self.mode_isgood, "Invalid mode"),
                    (self.timeout_isgood, "Invalid timeout")]
 
+    # Encode all the payloads in the payload set with the
+    # selected encoder. This encodes them in place, no
+    # return value should be expected.
     def encode_all_payloads(self, encoder):
         if encoder == "None":
             return None
@@ -55,6 +63,8 @@ class Options:
             e_list = encode_list(p_list, E)
             self.ps_sets[key] = e_list
 
+    # Ensures that the user-defined request timeout
+    # is a positive integer
     def timeout_isgood(self):
         t = self.timeout.GetValue()
         if t.isdigit() and int(t) > 0:
@@ -62,6 +72,11 @@ class Options:
         else:
             return False
 
+    # Ensures that the markers in the data box
+    # are in pairs and that the first left marker
+    # comes before the first right marker. This
+    # does not do a complete check of all the markers
+    # so this method will be improved in the future.
     def data_isgood(self):
         t = self.data.GetValue()
         lc, rc = (t.count(LEFT_CHAR), t.count(RIGHT_CHAR))
@@ -72,6 +87,8 @@ class Options:
         else:
             return True
 
+    # Ensure that the host contains only valid
+    # characters.
     def valid_host(self, host):
         template = "[A-Za-z0-9-.]+"
         if re.match(template, host):
@@ -79,6 +96,8 @@ class Options:
         else:
             return False
 
+    # Ensures that the provided port is a positive
+    # integer and within the range of TCP ports.
     def valid_port(self, port):
         if port.isdigit():
             if 0 < int(port) > 65535:
@@ -86,6 +105,12 @@ class Options:
             else:
                 return True
 
+    # Ensures that the provided mode corresponds
+    # to the number of parameter lists provided.
+    # If in Serial or Concurrent mode, there should
+    # be only one list. Otherwise there should be
+    # multiple.
+    # Pretty messy I'll clean it up later.
     def mode_isgood(self):
         mode = self.mode.GetValue()
         if len(self.ps_sets) == 1:
@@ -102,6 +127,8 @@ class Options:
             return False
         return True
 
+    # The actual function called to validate the
+    # host.
     def host_isgood(self):
         host = self.host.GetValue()
         if self.valid_host(host):
@@ -109,6 +136,8 @@ class Options:
         else:
             return False
 
+    # The actual function called to validate the
+    # port
     def port_isgood(self):
         port = self.port.GetValue()
         if self.valid_port(port):
@@ -116,6 +145,12 @@ class Options:
         else:
             return False
 
+    # Ensures that the user-supplied proxy info
+    # is correct. If proxy is disabled it's
+    # valid. If the supplied host or port are
+    # invalid, or if the authentication
+    # values are invalid this will fail.
+    # Does not allow for blank proxy passwords.
     def proxy_isgood(self):
         if self.proxy.GetValue():
             phost = self.proxy_host.GetValue()
@@ -137,13 +172,17 @@ class Options:
         else:
             return True
 
+    # Ensures that the number of reconnects
+    # to be attempted is a positive number.
     def reconnects_isgood(self):
         r = self.reconnects.GetValue()
-        if r.isdigit():
+        if r.isdigit() and int(r) >= 0:
             return True
         else:
             return False
 
+    # Ensures that the delay between
+    # reconnect attempts is valid
     def recon_delay_isgood(self):
         r = self.recon_delay.GetValue()
         if r.isdigit and int(r) >= 0:
@@ -151,13 +190,17 @@ class Options:
         else:
             return False
 
+    # Ensures that the number of connection
+    # threads is valid.
     def threads_isgood(self):
         t = self.threads.GetValue()
-        if t.isdigit() and 0 <int(t) < 256:
+        if t.isdigit() and 0 < int(t) < MAX_THREADS:
             return True
         else:
             return False
 
+    # Ensures that the delay between requests
+    # is valid.
     def req_delay_isgood(self):
         r = self.request_delay.GetValue()
         if r.isdigit() and int(r) >= 0:
@@ -165,6 +208,7 @@ class Options:
         else:
             return False
 
+    # Validates all the options
     def validate(self):
         for func, err in self.vs:
             if not func():

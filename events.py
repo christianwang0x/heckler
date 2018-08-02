@@ -3,11 +3,15 @@ import pickle
 import engine
 import asyncio
 import http
+
 from options import Options
 from constants import *
 from default_settings import *
 
 
+# Defines the handlers for different events on the control panel.
+# It should also be possible to call these from a different panel,
+# have not tested this yet.
 class EventsPanel(wx.Panel):
     def __init__(self, parent_window, *args, **kwargs):
         super(EventsPanel, self).__init__(*args, **kwargs)
@@ -15,13 +19,13 @@ class EventsPanel(wx.Panel):
         self.requests = []
         self.hfont = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT)
         self.hfont.SetPointSize(9)
-        self.fwfont = wx.Font(9, wx.FONTFAMILY_TELETYPE,
-                              wx.FONTSTYLE_NORMAL,
-                              wx.FONTWEIGHT_NORMAL)
         self.parent_window = parent_window
         self.engine = None
         self.progress_bar = None
+        self.running = False
 
+    # Gets called when the user hits run. Very messy with lots of redundant
+    # assignments and calls. Will be changed soon.
     async def OnRun(self, e):
         if self.ops.running:
             wx.MessageBox("Engine is already running", 'Error', wx.OK | wx.ICON_INFORMATION)
@@ -54,7 +58,7 @@ class EventsPanel(wx.Panel):
                                         password=ppass)
             E = engine.Engine(self.ops,  self.parent_window.loop)
             tasks = []
-            task = self.parent_window.loop.create_task(E.run(template, pset, _ssl, mode, self.progress_bar))
+            task = self.parent_window.loop.create_task(E.run(template, pset, _ssl, mode))
             tasks.append(task)
             await asyncio.wait(tasks)
             requests = tasks[0].result()
@@ -65,6 +69,8 @@ class EventsPanel(wx.Panel):
             self.parent_window.ToolBar.EnableTool(wx.ID_EXECUTE, True)
             return None
 
+    # Sets a stop signal that gets read by the engine every request.
+    # If no request is made the engine may not hear the signal
     def OnStop(self, e):
         if not self.ops.running:
             wx.MessageBox("Engine is not running", "Error", wx.OK | wx.ICON_INFORMATION)
@@ -74,6 +80,7 @@ class EventsPanel(wx.Panel):
         self.parent_window.ToolBar.EnableTool(wx.ID_EXECUTE, True)
         return None
 
+    # Resets all the input values to their defaults.
     def OnNew(self, e):
         self.ops.data.SetValue(DEFAULT_REQUEST_DATA)
         self.ops.host.SetValue(DEFAULT_HOST)
@@ -98,6 +105,7 @@ class EventsPanel(wx.Panel):
         self.progress_bar.SetValue(0)
         return None
 
+    # Saves a batch of requests into a pickle file for later viewing
     def OnSave(self, e):
         if not self.requests:
             wx.MessageBox("No requests have been made yet!", "Save error", wx.ICON_EXCLAMATION)
@@ -112,6 +120,7 @@ class EventsPanel(wx.Panel):
             with open(pathname, 'wb') as fp:
                 pickle.dump(self.requests, fp)
 
+    # Opens a batch of saved requests from a pickle file and opens a viewer tab
     def OnOpen(self, e):
         with wx.FileDialog(self, "Open requests file", wildcard="Pickle files (*.p)|*.p",
                            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
@@ -123,7 +132,8 @@ class EventsPanel(wx.Panel):
                 reqs = pickle.load(fp)
                 self.parent_window.CreateViewer(reqs)
 
-
+    # Does not work yet because I cannot use the actual control objects to store
+    # and load their values. Will be fixed soon.
     def OnOpenSetup(self, e):
         wx.MessageBox("Not working yet")
         """
@@ -139,7 +149,11 @@ class EventsPanel(wx.Panel):
         """
         return
 
+    # Saves the current setup into a pickle file. Like the OnOpenSetup method, this
+    # does not currently work for the same reasons.
     def OnSaveSetup(self, e):
+        wx.MessageBox("Not working yet")
+        """
         with wx.FileDialog(self, "Save current setup to file", wildcard="Pickle files (*.p)|*.p",
                            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as fileDialog:
             if fileDialog.ShowModal() == wx.ID_CANCEL:
@@ -147,19 +161,32 @@ class EventsPanel(wx.Panel):
             pathname = fileDialog.GetPath()
             with open(pathname, 'wb') as fp:
                 pickle.dump(self.ops, fp)
+        """
+        return
 
+    # Exits the application
     def OnExit(self, e):
         self.Close()
 
+    # In the future this will open a new frame from which users can configure
+    # persistent settings for the application, that it will default
+    # to when opening. Not yet implemented.
     def OnPreferences(self, e):
         wx.MessageBox("No preferences yet", "Preferences", wx.OK)
 
+    # In the future this will open a frame that will contain documentation
+    # that users can use as a reference. I will implement it when I'm not
+    # making so many changes to the application
     def OnHelp(self, e):
         wx.MessageBox(HELP_MSG, 'Help', wx.OK | wx.ICON_QUESTION)
 
+    # Opens a small message box with basic information about the app
     def OnAbout(self, e):
         wx.MessageBox(ABOUT_MSG, 'About', wx.OK | wx.ICON_INFORMATION)
 
+    # Updates the parameter list box on the control panel so that
+    # its values are in line with those in the stored dictionary
+    # Usually called when a user selects a different marker number
     def UpdatePSBox(self):
         current_marker = self.ops.marker_no.GetValue()
         self.ops.ps_box.Clear()
@@ -168,12 +195,14 @@ class EventsPanel(wx.Panel):
             self.ops.ps_box.Append(p)
         return None
 
+    # Loads a list of parameters from a text file into the current
+    # parameter list box. These parameters will be used for the
+    # marker that is currently selected.
     def OnLoadParamFile(self, e):
         with wx.FileDialog(self, "Open parameter file", wildcard="All files (*.*)|*.*",
                            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
             if fileDialog.ShowModal() == wx.ID_CANCEL:
                 return
-
             pathname = fileDialog.GetPath()
             with open(pathname, 'r') as fp:
                 ps = [i.rstrip() for i in fp.readlines()]
@@ -181,7 +210,8 @@ class EventsPanel(wx.Panel):
                 self.ops.ps_sets[current_marker] = ps
                 self.UpdatePSBox()
 
-
+    # Add a single parameter value to the end of the list
+    # from the input text box.
     def OnAddP(self, e):
         new_p = self.ops.add_p.GetValue()
         current_marker = self.ops.marker_no.GetValue()
@@ -192,6 +222,7 @@ class EventsPanel(wx.Panel):
             current_ps.append(new_p)
         self.UpdatePSBox()
 
+    # Delete the selected or last parameter from the parameter list.
     def OnDelP(self, e):
         current_marker = self.ops.marker_no.GetValue()
         current_ps = self.ops.ps_sets.get(current_marker)
@@ -205,13 +236,14 @@ class EventsPanel(wx.Panel):
                 current_ps.pop(i)
         self.UpdatePSBox()
 
-
+    # Clears the parameter list for the current marker
     def OnClearPS(self, e):
         current_marker = self.ops.marker_no.GetValue()
         self.ops.ps_sets[current_marker] = []
         self.UpdatePSBox()
 
-
+    # Called when a user selects a different marker
+    # number from the drop down box.
     def OnSelectPS(self, e):
         new_no = self.ops.marker_no.GetValue()
         new_ps = self.ops.ps_sets.get(new_no, [])
@@ -220,6 +252,8 @@ class EventsPanel(wx.Panel):
             self.ops.ps_box.Append(p)
         return None
 
+    # Add a pair of markers to the data box at the
+    # position of the cursor.
     def OnAddMarkers(self, e):
         index = self.ops.data.GetInsertionPoint()
         sindex = index
@@ -231,6 +265,7 @@ class EventsPanel(wx.Panel):
         self.ops.data.SetValue(newtext)
         return None
 
+    # Remove all the markers from the data box.
     def OnClearMarkers(self, e):
         oldtext = self.ops.data.GetValue()
         newtext = oldtext.replace(chr(0xab), '')

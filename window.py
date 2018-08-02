@@ -1,8 +1,12 @@
 import wx
 from control import ControlPanel
 from viewer_events import ViewerEventPanel
-from wxasync import AsyncBind
 
+
+# Defines the menu at the top of the screen
+# Unfortunately the current Async implementation does
+# not work with menu items or toolbar items, so these
+# controls have not been added yet.
 class MenuFrame(wx.Frame):
     def __init__(self, *args, **kwargs):
         super(MenuFrame, self).__init__(*args, **kwargs)
@@ -13,12 +17,12 @@ class MenuFrame(wx.Frame):
         sizer = wx.BoxSizer()
         sizer.Add(self.notebook, -1, wx.EXPAND | wx.ALL)
         self.super_panel.SetSizer(sizer)
- #       self.viewer_panel = ViewerPanel(reqs, self, self.notebook)
-#        self.notebook.AddPage(self.viewer_panel, "Viewer")
         self.InitMenu()
 
-
+    # Creates and adds menu items to the menu, and binds them to
+    # the appropriate callback functions
     def InitMenu(self):
+
         menubar = wx.MenuBar()
 
         file_menu = wx.Menu()
@@ -36,7 +40,6 @@ class MenuFrame(wx.Frame):
         file_menu.Append(exit_mi)
 
         control_menu = wx.Menu()
-        #run_mi = wx.MenuItem(control_menu, wx.ID_ANY, '&Run')
         stop_mi = wx.MenuItem(control_menu, wx.ID_ANY, '&Stop')
         preferences_mi = wx.MenuItem(control_menu, wx.ID_ANY, '&Preferences')
 
@@ -59,8 +62,6 @@ class MenuFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.control_panel.OnSaveSetup, save_setup_mi)
         self.Bind(wx.EVT_MENU, self.control_panel.OnExit, exit_mi)
 
-        #self.Bind(wx.EVT_MENU, self.control_panel.OnRun, run_mi)
-        #AsyncBind(run_mi, wx.EVT_MENU, self.control_panel.OnRun)
         self.Bind(wx.EVT_MENU, self.control_panel.OnStop, stop_mi)
         self.Bind(wx.EVT_MENU, self.control_panel.OnPreferences, preferences_mi)
 
@@ -73,12 +74,14 @@ class MenuFrame(wx.Frame):
 
         self.SetMenuBar(menubar)
 
+    # Create a viewer tab from a list of request objects.
     def CreateViewer(self, reqs):
         self.viewer_event_panel = ViewerEventPanel(self,reqs, self.notebook)
         self.notebook.AddPage(self.viewer_event_panel, "Viewer")
         return None
 
 
+# Defines the size and title of the main window
 class WindowFrame(MenuFrame):
     def __init__(self, *args, **kwargs):
         super(WindowFrame, self).__init__(*args, **kwargs)
@@ -90,6 +93,9 @@ class WindowFrame(MenuFrame):
         self.Center()
 
 
+# Initializes the toolbar, currently the run button does not work
+# as the asynchronous bind function does not work with toolbar
+# items.
 class ToolbarFrame(WindowFrame):
     def __init__(self, loop, *args, **kwargs):
         super(ToolbarFrame, self).__init__(*args, **kwargs)
@@ -104,7 +110,7 @@ class ToolbarFrame(WindowFrame):
         open_tb = toolbar.AddTool(wx.ID_OPEN, "Open", wx.Bitmap('res/icon/folder-open.png'))
         save_tb = toolbar.AddTool(wx.ID_SAVE, "Save", wx.Bitmap('res/icon/save.png'))
         exit_tb = toolbar.AddTool(wx.ID_EXIT, "Exit", wx.Bitmap('res/icon/sign-out-alt.png'))
-        run_tb = toolbar.AddTool(wx.ID_EXECUTE, "Run", wx.Bitmap('res/icon/play.png'))
+        # run_tb = toolbar.AddTool(wx.ID_EXECUTE, "Run", wx.Bitmap('res/icon/play.png'))
         stop_tb = toolbar.AddTool(wx.ID_STOP, "Stop", wx.Bitmap('res/icon/stop.png'))
         toolbar.EnableTool(wx.ID_STOP, False)
         toolbar.EnableTool(wx.ID_EXECUTE, False)

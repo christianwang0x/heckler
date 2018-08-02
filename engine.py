@@ -2,56 +2,54 @@ import asyncio
 import ssl
 import time
 import async_timeout
-import re
 
 from constants import *
 from http import *
 
-class Request():
-    def __init__(self, template, params):
-        self.template = template
-        self.params = params
-        self.request_time = None
-        self.response_time = None
-        self.request = template
-        self.response = None
 
+# An exception of this class should be thrown if there is an
+# error during the running of the engine.
 class EngineException(Exception):
     def __init__(self, message, errors):
         super(EngineException, self).__init__(message)
         self.errors = errors
 
+
+# This defines the mechanism that makes the actual requests to the server.
+# In the future, the aiohttp library may be used, but was not originally because
+# it does not support the modification of the raw HTTP data.
 class Engine:
+    # Stores some of the input values as instance attributes for easier
+    # access by the methods. Most of these values should not change throughout
+    # the life of an Engine instance. Also links the object to the loop
+    # of the main app, and defines a semaphore which controls the number
+    # of connection threads.
     def __init__(self, ops, loop):
         host = str(ops.host.GetValue())
         port = int(ops.port.GetValue())
         threads = int(ops.threads.GetValue())
         timeout = int(ops.timeout.GetValue())
+        proxy = bool(ops.proxy.GetValue())
         self.context = ssl.create_default_context()
         self.semaphore = asyncio.Semaphore(threads)
         self.loop = loop
-        proxy = bool(ops.proxy.GetValue())
         self.host = ops.proxy_host.GetValue() if proxy else host
         self.port = int(ops.proxy_port.GetValue() if proxy else port)
         self.timeout = timeout
         self.requests_made = 0
         self.ops = ops
         self.update_cl = bool(ops.update_cl.GetValue())
+        self.progress_bar = ops.progress_bar
 
-    def add_req_newlines(self, request):
-        end = '\r\n\r\n'
-        if request.endswith(end):
-            return request
-        else:
-            request = request.rstrip('\r\n ')
-            request += end
-            return request
-
+    # Returns a request in serial mode
     def gen_serial(self, template, param):
         req = Request(template, [param])
         req = self.sub_marker(req, param)
         return req
 
+    # Generator for requests in serial mode
+    # Each call yields a request with the single
+    # pair of markers substituted with one parameter
     def gen_serials(self, template, param_set):
         if len(param_set) != 1:
             raise EngineException("Bad parameters", "Serial")
@@ -59,27 +57,33 @@ class Engine:
         for param in param_list:
             yield self.gen_serial(template, param)
 
+    # Returns a request in concurrent mode
     def gen_concurrent(self, template, param):
         req = Request(template, [param])
         while req.request.count(LEFT_CHAR):
             req = self.sub_marker(req, param)
         return req
 
+    # Generator for requests in concurrent mode
+    # Each call yields a request with every pair
+    # of markers substituted with the same parameter
+    # from a single list.
     def gen_concurrents(self, template, param_set):
         param_list = param_set[list(param_set.keys())[0]]
         for param in param_list:
             yield self.gen_concurrent(template, param)
 
+    # Substutues a pair of markers with a parameter
     def sub_marker(self, req, param):
         lb_index = req.request.index(LEFT_CHAR)
         rb_index = req.request.index(RIGHT_CHAR)
         req.request = req.request[:lb_index] + param + req.request[rb_index + 1:]
-        req.request = self.add_req_newlines(req.request)
+        req.request = add_req_newlines(req.request)
         if self.update_cl:
             req.request = set_content_len(req.request)
-
         return req
 
+    # Returns a request in multiplex mode.
     def gen_multiplex(self, template, param_list):
         req = Request(template, param_list)
         req.request = template
@@ -87,6 +91,10 @@ class Engine:
             req = self.sub_marker(req, p)
         return req
 
+    # Generator for requests in multiplex mode
+    # Each call yields a request with each pair
+    # of markers substituted with a parameter
+    # from that pair's corresponding list.
     def gen_multiplexes(self, template, param_set):
         min_len = min([len(param_set[i]) for i in param_set.keys()])
         for j in range(min_len):
@@ -96,39 +104,8 @@ class Engine:
                 param_list.append(param)
             yield self.gen_multiplex(template, param_list)
 
-
-# for testing purposes only
-    async def get_request(self, request):
-        async with self.semaphore:
-            await asyncio.sleep(1)
-            return request
-
-    async def http_read(self, reader):
-        data = b''
-        while True:
-            buf = await reader.read(BUFF)
-            data += buf
-            if b'\r\n\r\n' in data:
-                nl = b'\r\n'
-                break
-            elif b'\n\n' in data:
-                nl = b'\n'
-                break
-            else:
-                continue
-        headers = data.partition(nl*2)[0]
-        cl = [line for line in headers.split(nl) if b'Content-Length' in line]
-        if len(cl) != 1:
-            print(data, cl, headers, nl, sep='\n')
-            raise EngineException("Content-Length header not found", "http_read")
-        content_len = int(cl[0].split(b' ')[1].rstrip())
-        so_far = len(data.partition(nl)[2])
-        while so_far < content_len:
-            buf = await reader.read(BUFF)
-            data += buf
-            so_far += BUFF
-        return data
-
+    # Asynchronous function that makes a plain HTTP
+    # request to the server.
     async def tcp_request(self, request):
         async with self.semaphore:
             async with async_timeout.timeout(self.timeout):
@@ -138,7 +115,7 @@ class Engine:
                 writer.write(request_data.encode())
                 await writer.drain()
                 request.request_time = time.time()
-                data = await self.http_read(reader)
+                data = await http_read(reader)
                 writer.close()
                 request.response_time = time.time()
                 request.response = data
@@ -146,6 +123,9 @@ class Engine:
             self.progress_bar.SetValue(self.requests_made)
             return request
 
+    # Very similar to tcp_request function except for
+    # HTTPS connections. Lots of redundant code here I'll
+    # change this soon
     async def ssl_request(self, request):
         async with self.semaphore:
             async with async_timeout.timeout(self.timeout):
@@ -155,7 +135,7 @@ class Engine:
                 writer.write(request_data.encode())
                 await writer.drain()
                 request.request_time = time.time()
-                data = await self.http_read(reader)
+                data = await http_read(reader)
                 writer.close()
                 request.response_time = time.time()
                 request.response = data
@@ -163,6 +143,8 @@ class Engine:
             self.progress_bar.SetValue(self.requests_made)
             return request
 
+    # The asynchronous function that defines the mechanism that makes
+    # the requests to the server.
     async def engine(self, template, param_set, _ssl, mode):
         tasks = []
         if mode == 'Serial':
@@ -186,10 +168,9 @@ class Engine:
         await asyncio.wait(tasks)
         return [t.result() for t in tasks]
 
-    async def run(self, template, param_set, _ssl, mode, progress_bar):
-        self.progress_bar = progress_bar
-#        requests = self.loop.run_until_complete(
-#            self.engine(template, param_set, _ssl, mode))
+    # The function that gets called by the main app, runs the engine
+    # and returns the request objects with the response values.
+    async def run(self, template, param_set, _ssl, mode):
         t = [self.loop.create_task(self.engine(template, param_set, _ssl, mode))]
         await asyncio.wait(t)
         return t[0].result()

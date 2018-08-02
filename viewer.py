@@ -1,7 +1,6 @@
 import wx
-# from viewer_events import ViewerEventPanel
 
-
+# Defines the layout and formatting for the viewer tab
 class ViewerPanel(wx.Panel):
     def __init__(self, parent_window, reqs, *args, **kwargs):
         super(ViewerPanel, self).__init__(*args, **kwargs)

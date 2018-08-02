@@ -1,14 +1,14 @@
-from asyncio.events import get_event_loop
 import asyncio
 import wx
 import warnings
 from asyncio.futures import CancelledError
 from collections import defaultdict
+from asyncio.events import get_event_loop
+
 
 GlobalWxAsyncApp = None
 
 # Special thanks to Christian Bodt for creating this module!
-
 
 class WxAsyncApp(wx.App):
     def __init__(self, warn_on_cancel_callback=False, loop=None):

@@ -2,6 +2,8 @@ import wx
 import pickle
 from viewer import ViewerPanel
 
+# Defines the callback functions in the viewer tab. This will be completed soon
+# ( don't expect much to work in the viewer at the moment )
 class ViewerEventPanel(ViewerPanel):
     def __init__(self, *args, **kwargs):
         super(ViewerEventPanel, self).__init__(*args, **kwargs)
