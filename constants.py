@@ -7,3 +7,5 @@ RIGHT_CHAR = chr(0xbb)
 
 BUFF = 1024
 MAX_THREADS = 256
+
+NL = '\r\n'
