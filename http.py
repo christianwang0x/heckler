@@ -2,16 +2,77 @@ import re
 from base64 import b64encode
 from constants import *
 
+
+class RequestPacket:
+    def __init__(self, packet_data):
+        self.packet_data = packet_data
+        self.method = self.get_method(packet_data)
+        self.uri = self.get_uri(packet_data)
+        self.version = self.get_version(packet_data)
+        self.headers = self.get_headers(packet_data)
+        self.data = self.get_data(packet_data)
+
+    def get_method(self, packet_data):
+        method = packet_data.strip().split()[0]
+        return method
+
+    def get_uri(self, packet_data):
+        uri = packet_data.strip().split()[1]
+        return uri
+
+    def get_version(self, packet_data):
+        version = packet_data.strip().split()[2]
+        return version
+
+    def get_headers(self, packet_data):
+        headers = []
+        for line in packet_data.split('\n')[1:]:
+            line = line.strip()
+            if not line:
+                break
+            key, value = line.split(":")
+            value = value.lstrip()
+            headers.append((key, value))
+        return headers
+
+    def get_data(self, packet_data):
+        split_packet = packet_data.split('\n')
+        while split_packet:
+            line = split_packet[0]
+            if not line.strip():
+                break
+            else:
+                split_packet.pop(0)
+        else:
+            return ""
+        data = '\n'.join(split_packet).rstrip()
+        return data
+
+    def format(self):
+        top_line = ' '.join([self.method, self.uri, self.version])
+        formatted = top_line + NL
+        header_lines = []
+        for key, value in self.headers:
+            header = ': '.join((key, value))
+            header_lines.append(header)
+        formatted += NL.join(header_lines)
+        formatted += NL * 2
+        if self.data:
+            self.data = self.data.rstrip()
+            formatted += self.data + (NL * 2)
+        return formatted
+
+
 # An object representing a single HTTP request
 # to the server, including the parameters
 # and response.
-class Request():
+class Request:
     def __init__(self, template, params):
-        self.template = template
+        self.template = RequestPacket(template).format()
         self.params = params
         self.request_time = None
         self.response_time = None
-        self.request = template
+        self.request = self.template
         self.response = None
 
 
@@ -27,61 +88,33 @@ class HttpException(Exception):
 # so that the URI now contains the scheme and domain name
 # of the remote server. If authentication is enabled, this
 # also carries the username and password, encoded in Base64, to
-# the server under the Proxy-Authorization header.
+# the server under the Proxy-Authorization header. HTTPS via
+# the CONNECT method is not supported yet, so any traffic
+# between the client and the proxy server is unencrypted.
 def proxify(template, dest_host, https, auth=False, username="", password=""):
-    nl = '\r\n'
-    top_line, rest= template.split(nl, 1)
-    path_version = top_line.partition(' ')[2]
-    path = path_version.rpartition(' ')[0]
-    full_pattern = 'https?:\/\/.+'
-    path_pattern = '\/.+'
-    if re.match(full_pattern, path):
-        pass
-    elif re.match(path_pattern, path):
-        scheme = 'https://' if https else 'http://'
-        new_uri = scheme + dest_host + path
-        template = template.replace(path, new_uri, 1)
-    else:
-        raise HttpException("Bad URI in template", "proxify")
+    r = RequestPacket(template)
+    new_uri = 'https://' if https else 'http://'
+    new_uri += dest_host
+    new_uri += r.uri
+    r.uri = new_uri
     if auth:
-        pauth_header = "Proxy-Authorization: Basic "
         cred_bytes = bytes(username + ':' + password, 'utf-8')
         encoded_cred = b64encode(cred_bytes).decode('utf-8')
-        pauth_header += encoded_cred
-        top_line, rest = template.split(nl, 1)
-        template = top_line + nl + pauth_header + nl + rest
-    return template
+        key = 'Proxy-Authorization'
+        val = 'Basic ' + encoded_cred
+        r.headers.append((key, val))
+    return r.format()
 
 
-# Ensures that the HTTP request ends with two DOS style
-# newlines, if this is not the case, the request will probably
-# time out.
-def add_req_newlines(request):
-    end = '\r\n\r\n'
-    if request.endswith(end):
-        return request
-    else:
-        request = request.rstrip('\r\n ')
-        request += end
-        return request
-
-# Again a pretty messy function that sets the Content-Length
-# header of a request that contains data to the length of the
-# request data.
 def set_content_len(request_str):
-    nl = '\r\n'
-    stripped = request_str.rstrip()
-    split = stripped.split(nl*2, 1)
-    if len(split) == 1:
-        return request_str
-    elif len(split) == 2:
-        headers, data = split
-        new_header = 'Content-Length: %d' % len(data)
-        pattern = 'Content-Length: \d+'
-        result = re.sub(pattern, new_header, request_str)
-        return result
-    else:
-        raise HttpException("Invalid newlines in request", "set_content_len")
+    r = RequestPacket(request_str)
+    data_len = str(len(r.data))
+    for key, value in r.headers:
+        if key == 'Content-Length':
+            r.headers.remove((key, value))
+            break
+    r.headers.append(('Content-Length', data_len))
+    return r.format()
 
 
 # Asynchronous function to read an HTTP request from a socket-like
