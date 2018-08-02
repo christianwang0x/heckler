@@ -15,3 +15,6 @@ Tool that automates the tampering, sending, and viewing of raw HTTP requests.
   <pre><code>python3 main.py</code</pre>
 
   ## Proper documentation coming soon
+
+  ![control.png](https://raw.githubusercontent.com/christianwang0x/heckler/master/res/img/control.png)
+  ![viewer.png](https://raw.githubusercontent.com/christianwang0x/heckler/master/res/img/viewer.png)
