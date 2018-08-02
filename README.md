@@ -12,7 +12,7 @@ Tool that automates the tampering, sending, and viewing of raw HTTP requests.
   This cannot run on wxPython classic. wxPython4 (Pheonix) is required.
 
   To run:
-  <pre><code>python3 main.py</code</pre>
+  <pre><code>python3 main.py</code></pre>
 
 
 ## Proper documentation coming soon
