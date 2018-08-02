@@ -107,6 +107,8 @@ class Engine:
     # request to the server.
     async def tcp_request(self, request):
         async with self.semaphore:
+            delay = float(self.ops.request_delay.GetValue())/1000
+            asyncio.sleep(delay)
             async with async_timeout.timeout(self.timeout):
                 reader, writer = await asyncio.open_connection(
                     self.host, int(self.port), loop=self.loop)
@@ -127,6 +129,8 @@ class Engine:
     # change this soon
     async def ssl_request(self, request):
         async with self.semaphore:
+            delay = float(self.ops.request_delay.GetValue())/1000
+            asyncio.sleep(delay)
             async with async_timeout.timeout(self.timeout):
                 reader, writer = await asyncio.open_connection(
                     self.host, int(self.port), loop=self.loop, ssl=self.context)
