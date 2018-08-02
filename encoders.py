@@ -23,13 +23,15 @@ class EncodingScheme:
 #  Encodes base64 data
 class Base64(EncodingScheme):
     @staticmethod
-    def encode(input_bytes):
-        return base64.b64encode(input_bytes)
+    def encode(input_str):
+        input_bytes = bytes(input_str, 'utf-8')
+        return base64.b64encode(input_bytes).decode('utf-8')
 
 
 class MD5(EncodingScheme):
     @staticmethod
-    def encode(input_bytes):
+    def encode(input_str):
+        input_bytes = bytes(input_str, 'utf-8')
         return hashlib.md5(input_bytes).hexdigest()
 
 
@@ -61,18 +63,21 @@ class EncoderException(Exception):
 
 
 # Encode to ASCII hex format
-def ascii_hex_encode(input_bytes):
+def ascii_hex_encode(input_str):
+    input_bytes = bytes(input_str, 'utf-8')
     encoded = ""
     for b in input_bytes:
-        encoded += hex(int.from_bytes(b, 'big'))[2:]
-
+        byte = hex(int.from_bytes([b], 'big'))[2:]
+        if len(byte) < 2:
+            byte = '0' + byte
+        encoded += byte
     return encoded
 
 
 # Encode with URL encoding scheme
 # Including space character
-def url_encode(input_bytes):
-    return urllib.parse.quote_plus(input_bytes)
+def url_encode(input_str):
+    return urllib.parse.quote_plus(input_str)
 
 
 # Encode a 2d table of bytes with the
