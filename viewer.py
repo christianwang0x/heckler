@@ -49,7 +49,7 @@ class ViewerPanel(wx.Panel):
         sizer.AddGrowableRow(3)
         sizer.AddGrowableRow(12)
 
-        sizer.Add((10, 10), pos=(20, 3))
+        sizer.Add((20, 20), pos=(20, 4))
 
     def ParseRequest(self, request):
         request_tl = request.request.split('\n')[0].rstrip()
