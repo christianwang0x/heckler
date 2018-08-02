@@ -135,7 +135,6 @@ async def http_read(reader):
     headers = data.partition(nl*2)[0]
     cl = [line for line in headers.split(nl) if b'Content-Length' in line]
     if len(cl) != 1:
-        print(data, cl, headers, nl, sep='\n')
         raise HttpException("Content-Length header not found", "http_read")
     content_len = int(cl[0].split(b' ')[1].rstrip())
     so_far = len(data.partition(nl)[2])
