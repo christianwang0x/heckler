@@ -3,7 +3,6 @@ import ssl
 import time
 import async_timeout
 
-from constants import *
 from http import *
 
 
@@ -75,10 +74,10 @@ class Engine:
 
     # Substutues a pair of markers with a parameter
     def sub_marker(self, req, param):
+        req.request = RequestPacket(req.request).format()
         lb_index = req.request.index(LEFT_CHAR)
         rb_index = req.request.index(RIGHT_CHAR)
         req.request = req.request[:lb_index] + param + req.request[rb_index + 1:]
-        req.request = add_req_newlines(req.request)
         if self.update_cl:
             req.request = set_content_len(req.request)
         return req
@@ -146,6 +145,7 @@ class Engine:
     # The asynchronous function that defines the mechanism that makes
     # the requests to the server.
     async def engine(self, template, param_set, _ssl, mode):
+        template = RequestPacket(template).format()
         tasks = []
         if mode == 'Serial':
             generator = self.gen_serials(template, param_set)
