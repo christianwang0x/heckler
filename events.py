@@ -21,7 +21,6 @@ class EventsPanel(wx.Panel):
         self.hfont.SetPointSize(9)
         self.parent_window = parent_window
         self.engine = None
-        self.progress_bar = None
         self.running = False
 
     # Gets called when the user hits run. Very messy with lots of redundant
@@ -102,7 +101,7 @@ class EventsPanel(wx.Panel):
         self.ops.recon_delay.SetValue(DEFAULT_RCD)
         self.ops.threads.SetValue(DEFAULT_THREADS)
         self.ops.request_delay.SetValue(DEFAULT_RQD)
-        self.progress_bar.SetValue(0)
+        self.ops.progress_bar.SetValue(0)
         return None
 
     # Saves a batch of requests into a pickle file for later viewing
@@ -117,6 +116,8 @@ class EventsPanel(wx.Panel):
                 return
 
             pathname = fileDialog.GetPath()
+            if not pathname.endswith('.p'):
+                pathname += '.p'
             with open(pathname, 'wb') as fp:
                 pickle.dump(self.requests, fp)
 
@@ -166,7 +167,7 @@ class EventsPanel(wx.Panel):
 
     # Exits the application
     def OnExit(self, e):
-        self.Close()
+        self.parent_window.Close()
 
     # In the future this will open a new frame from which users can configure
     # persistent settings for the application, that it will default
