@@ -80,9 +80,15 @@ class Options:
     def data_isgood(self):
         t = self.data.GetValue()
         lc, rc = (t.count(LEFT_CHAR), t.count(RIGHT_CHAR))
-        if lc != rc or lc != len(self.ps_sets):
+        if lc != rc:
+            print(1)
             return False
-        elif t.index(LEFT_CHAR) > t.index(RIGHT_CHAR):
+        if self.mode.GetValue() != 'Concurrent':
+            if lc != len(self.ps_sets):
+                print(2)
+                return False
+        if t.index(LEFT_CHAR) > t.index(RIGHT_CHAR):
+            print(3)
             return False
         else:
             return True
